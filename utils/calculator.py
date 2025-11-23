@@ -47,3 +47,4 @@ def filter_by_channel(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     return df[df[channel_col].astype(str).str.contains(keyword, na=False)]
+
