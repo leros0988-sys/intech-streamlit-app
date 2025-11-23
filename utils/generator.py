@@ -1,4 +1,5 @@
 import pandas as pd
+import io
 
 def generate_bill(bill_df, save_path="대금청구서.xlsx"):
     bill_df.to_excel(save_path, index=False)

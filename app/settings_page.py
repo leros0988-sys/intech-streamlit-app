@@ -1,6 +1,5 @@
 import streamlit as st
-from utils.loader import load_settings, save_settings
-
+from app.utils.loader import load_settings, save_settings
 
 def settings_page():
     st.markdown("## ⚙️ 설정 메뉴")

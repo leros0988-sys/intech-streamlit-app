@@ -1,8 +1,5 @@
-import csv
-import datetime as dt
-from pathlib import Path
-
-import pandas as pd
+import datetime
+import json
 
 LOG_FILE = Path("login_logs.csv")
 

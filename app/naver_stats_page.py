@@ -1,6 +1,6 @@
 import streamlit as st
-from utils.calculator import filter_by_channel
-
+import pandas as pd
+from app.utils.loader import load_settings
 
 def naver_stats_page():
     st.markdown("## 📨 네이버 통계자료")

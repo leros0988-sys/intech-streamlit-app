@@ -1,6 +1,6 @@
 import streamlit as st
-from utils.calculator import filter_by_channel
-
+import pandas as pd
+from app.utils.loader import load_settings
 
 def kt_stats_page():
     st.markdown("## 📡 KT 통계자료")

@@ -1,9 +1,9 @@
-import io
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import io
 
-from utils.loader import load_partner_db
-from utils.generator import generate_document
+from app.utils.loader import load_partner_db
+from app.utils.generator import generate_document
 
 
 def _df_to_excel_bytes(df: pd.DataFrame) -> bytes:

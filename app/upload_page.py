@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-from utils.validator import validate_uploaded_df
 
+from app.utils.validator import validate_uploaded_files
+from app.utils.loader import load_rate_table, load_partner_db
 
 def upload_page():
     st.markdown("## 📂 정산 업로드 및 전체 통계자료")
