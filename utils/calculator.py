@@ -1,50 +1,53 @@
 import pandas as pd
 
+def summarize_by_settle_id(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    카카오 기준 SETTLE ID 별로 대금청구서 집계.
+    금액 관련 컬럼 자동 탐지하여 합산.
+    """
 
-def summarize_kakao(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    카카오 정산 간단 집계:
-    - 카카오 settle id 별 건수 및 금액 합계
-    """
-    if "카카오 settle id" not in df.columns:
+    if df is None or df.empty:
         return pd.DataFrame()
 
-    # 금액 컬럼 탐색
-    amount_col = None
-    for cand in ["금액", "청구금액", "정산금액", "합계"]:
-        if cand in df.columns:
-            amount_col = cand
-            break
+    # 금액 컬럼 자동 탐색
+    amount_cols = [c for c in df.columns if c in ["금액", "청구금액", "정산금액", "합계"]]
+    if not amount_cols:
+        raise ValueError("금액 관련 컬럼을 찾을 수 없습니다.")
 
-    group_cols = ["카카오 settle id"]
-    agg_dict = {"카카오 settle id": "count"}
-    if amount_col:
-        agg_dict[amount_col] = "sum"
+    amount_col = amount_cols[0]
 
-    grouped = df.groupby("카카오 settle id", dropna=True).agg(agg_dict).rename(
-        columns={"카카오 settle id": "건수"}
-    )
+    if "카카오 settle id" not in df.columns:
+        raise ValueError("카카오 settle id 컬럼이 없습니다.")
 
-    grouped = grouped.reset_index()
-    if amount_col:
-        grouped = grouped.rename(columns={amount_col: "금액합계"})
+    grouped = df.groupby("카카오 settle id")[amount_col].sum().reset_index()
+    grouped.rename(columns={amount_col: "총 청구금액"}, inplace=True)
 
     return grouped
 
 
-def filter_by_channel(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
+def calculate_settlement(df: pd.DataFrame) -> dict:
     """
-    '중계자/채널/발송채널' 컬럼에서 keyword를 포함하는 행만 필터링.
-    keyword: '카카오', 'KT', '네이버' 등
+    정산 페이지에서 총 발송건수/총 금액 계산.
+    (카카오 기반)
     """
-    channel_col = None
-    for cand in ["중계자", "채널", "발송채널", "중계사"]:
-        if cand in df.columns:
-            channel_col = cand
-            break
+    if df is None or df.empty:
+        return {
+            "총 정산건수": 0,
+            "총 금액": 0
+        }
 
-    if channel_col is None:
-        return pd.DataFrame()
+    if "카카오 settle id" not in df.columns:
+        return {
+            "총 정산건수": 0,
+            "총 금액": 0
+        }
 
-    return df[df[channel_col].astype(str).str.contains(keyword, na=False)]
+    summary = summarize_by_settle_id(df)
 
+    total_count = len(summary)      # SETTLE ID 기준 건수
+    total_amount = summary["총 청구금액"].sum()
+
+    return {
+        "총 정산건수": int(total_count),
+        "총 금액": int(total_amount)
+    }
