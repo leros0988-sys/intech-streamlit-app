@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-from utils.loader import load_partner_db
-from utils.calculator import summarize_by_settle_id
+from app.utils.loader import load_partner_db
+from app.utils.calculator import summarize_by_settle_id
 
 
 def gian_page():
