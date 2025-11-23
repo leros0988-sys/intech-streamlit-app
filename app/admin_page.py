@@ -1,17 +1,30 @@
 import streamlit as st
 
+
 def admin_page():
+    st.markdown("## 🛠 관리자 전용 메뉴")
 
-    if st.session_state.user != "admin":
-        st.error("관리자만 접근 가능합니다.")
-        return
+    st.info(
+        """
+        이 영역은 **관리자 계정**으로 로그인했을 때만 접근 가능합니다.  
+        - 로그인 로그 확인 → **로그 조회** 메뉴  
+        - 시스템/파일 경로/이미지/보안 값 설정 → **설정** 메뉴  
 
-    st.markdown('<div class="title-text">🔧 관리자 메뉴</div>', unsafe_allow_html=True)
+        여기서는 간단히 현재 세션 상태를 요약해서 보여줍니다.
+        """
+    )
 
-    st.markdown('<div class="cute-box">', unsafe_allow_html=True)
-    st.write("• 사용자 계정 설정")
-    st.write("• 시스템 점검")
-    st.write("• 로그 기록 조회")
-    st.write("• 발송 통계 확인")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("### 세션 요약")
+    keys = [
+        "username",
+        "is_admin",
+        "auto_logout_minutes",
+        "rate_table_path",
+        "partner_db_path",
+        "main_image_path",
+        "youtube_url",
+    ]
+    for k in keys:
+        st.write(f"- **{k}**: `{st.session_state.get(k)}`")
+
 
