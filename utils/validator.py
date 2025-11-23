@@ -1,37 +1,24 @@
-# utils/validator.py
-
 import pandas as pd
 
-def validate_uploaded_files(kakao, kt, naver):
-    """
-    업로드된 3개 파일(카카오, KT, 네이버) 검증.
-    """
+def validate_uploaded_files(kakao_df, kt_df):
+    """카카오/KT 업로드 파일 기본 검증"""
 
-    # 1) 파일 누락 여부
-    if kakao is None or kt is None or naver is None:
-        return {
-            "status": "error",
-            "message": "❌ 카카오 / KT / 네이버 파일을 모두 업로드해주세요."
-        }
+    errors = []
 
-    # 2) 확장자 체크
-    for f in [kakao, kt, naver]:
-        if not f.name.endswith(".xlsx"):
-            return {
-                "status": "error",
-                "message": f"❌ '{f.name}' 은 xlsx 파일이 아닙니다."
-            }
+    # 1) 빈 파일
+    if kakao_df.empty:
+        errors.append("카카오 업로드 파일이 비어 있습니다.")
+    if kt_df.empty:
+        errors.append("KT 업로드 파일이 비어 있습니다.")
 
-    # 3) 엑셀 로드 테스트
-    try:
-        pd.read_excel(kakao)
-        pd.read_excel(kt)
-        pd.read_excel(naver)
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"❌ 엑셀 파일을 읽는 중 오류 발생: {e}"
-        }
+    # 2) 필드 확인
+    required_cols = ["기관명", "담당자", "발송건수"]
 
-    # 성공
-    return {"status": "ok", "message": "3개 파일 정상 확인되었습니다."}
+    for col in required_cols:
+        if col not in kakao_df.columns:
+            errors.append(f"카카오 파일에 '{col}' 컬럼 없음")
+        if col not in kt_df.columns:
+            errors.append(f"KT 파일에 '{col}' 컬럼 없음")
+
+    return errors
+
