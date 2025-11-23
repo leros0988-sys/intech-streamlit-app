@@ -1,5 +1,5 @@
 import streamlit as st
-from components.sidebar_menu import draw_sidebar
+from app.components.sidebar_menu import draw_sidebar
 
 from app.main_page import main_page
 from app.finance_page import finance_page
