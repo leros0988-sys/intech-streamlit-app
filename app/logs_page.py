@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.logger import load_login_logs
+from app.utils.logger import load_login_logs
 
 
 def logs_page():
