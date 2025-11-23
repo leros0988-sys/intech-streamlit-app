@@ -1,15 +1,14 @@
 import csv
 from datetime import datetime
-from pathlib import Path   # ← ← ← ★★★ 여기가 없어서 NameError 난 거임
+from pathlib import Path   # ★★★ 여기 추가해야 NameError가 사라짐 ★★★
 
 LOG_FILE = Path("login_logs.csv")
 
 
 def write_log(username: str, event: str):
-    """로그 파일에 기록"""
+    """로그 기록"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # 파일이 없으면 헤더 자동 생성
     file_exists = LOG_FILE.exists()
 
     with open(LOG_FILE, "a", newline="", encoding="utf-8") as f:
