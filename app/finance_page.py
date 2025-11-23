@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 
 from app.utils.loader import load_rate_table, load_partner_db
-from app.utils.validator import validate_uploaded_files
+from app.utils.validator import validate_uploaded_df
 from app.utils.calculator import calculate_settlement
 from app.utils.generator import generate_settlement_file
 
