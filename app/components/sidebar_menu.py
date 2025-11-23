@@ -5,7 +5,7 @@ def draw_sidebar(is_admin: bool = False) -> str:
     """사이드바 라디오 메뉴 그리기 후 선택값 반환"""
 
     with st.sidebar:
-        st.markdown("### 🌸 메뉴")
+        st.markdown("메뉴")
 
         # 기본 메뉴
         menu_items = [

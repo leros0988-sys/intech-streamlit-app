@@ -20,7 +20,7 @@ def apply_global_styles():
     .subtitle-text {
         font-size: 20px;
         text-align: center;
-        color: #FFFFFF;
+        color: #666;
         margin-bottom: 25px;
     }
 
