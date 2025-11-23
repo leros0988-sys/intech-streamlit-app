@@ -82,7 +82,7 @@ def run_app():
     elif menu == "협력사 정산":
         partner_page()
     elif menu == "기안 자료 생성":
-        document_page()
+        gian_page()
     elif menu == "관리자 메뉴":
         admin_page()
     elif menu == "로그 조회":
