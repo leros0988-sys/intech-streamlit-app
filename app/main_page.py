@@ -30,7 +30,7 @@ def main_page():
                 font-weight:1200;
                 text-align:center;
                 margin-bottom:28px;">
-            📱 아이앤텍 전자고지 대금청구서 대시보드
+            📱 아이앤텍 전자고지 대금청구서 대시보드 📱
         </div>
     """, unsafe_allow_html=True)
 
@@ -64,7 +64,7 @@ def main_page():
             margin-bottom:35px;
             box-shadow:0 2px 12px rgba(0,0,0,0.06);
         ">
-            <h3 style="margin:0; padding:0; font-size:22px;">📊 12월 정산 요약</h3>
+            <h3 style="margin:0; padding:0; font-size:22px;"> 12월 정산 요약</h3>
             <p style="font-size:17px; margin-top:10px;">
                 • 12월 총 대금청구서 : <b>{total_statements:,} 건</b><br>
                 • 12월 총 정산 금액 : <b>{total_amount:,} 원</b><br>
@@ -88,7 +88,7 @@ def main_page():
             margin-bottom:35px;
             box-shadow:0 2px 12px rgba(0,0,0,0.06);
         ">
-            <h3 style="margin:0; padding:0; font-size:22px;">📌 운영 안내</h3>
+            <h3 style="margin:0; padding:0; font-size:22px;">공지사항</h3>
             <p style="font-size:17px; margin-top:10px;">
                 {settings.get("dashboard_text")}
             </p>
