@@ -1,4 +1,12 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent))
+
 import streamlit as st
+from app.login_page import login_page
+from app.main_page import main_page
+...
+
 
 # 스타일
 from app.style import apply_global_styles
