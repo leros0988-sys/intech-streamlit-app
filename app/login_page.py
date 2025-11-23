@@ -2,7 +2,7 @@ import streamlit as st
 
 USER_CREDENTIALS = {
     "intech2001": "Qtncjwkrwndlqcjrowls40#",
-    "intech2014": "8888"
+    "intech2014": "vlftkwmrtodWW^^"
 }
 
 def login_page():
