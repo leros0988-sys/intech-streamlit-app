@@ -1,5 +1,5 @@
 import streamlit as st
-from app.utils.loader import load_settings
+from utils.loader import load_settings
 
 USER_CREDENTIALS = {
     "intech2001": "Qtncjwkrwndlqcjrowls40#",
