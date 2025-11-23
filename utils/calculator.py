@@ -1,16 +1,27 @@
 import pandas as pd
 
-def calculate_partner_fee(kakao_df, kt_df, rate_db):
-    """협력사 정산 계산"""
+def calculate_settlement(data_df, rate_df):
+    """
+    data_df : 업로드된 엑셀 (발송 건별 DataFrame)
+    rate_df : 요율표 DataFrame
+    """
 
-    # 두 업체 데이터 합치기
-    df = pd.concat([kakao_df, kt_df], ignore_index=True)
+    output = data_df.copy()
 
-    # 요율 테이블과 매칭
-    df = df.merge(rate_db, how="left", on="기관명")
+    # key 매칭: '기관명' + '부서명' + '문서명'
+    merged = pd.merge(
+        output,
+        rate_df,
+        left_on=["기관명", "부서명", "문서명"],
+        right_on=["기관명", "부서", "문서"],
+        how="left"
+    )
+
+    if merged.isnull().any().any():
+        raise ValueError("단가표 매칭 실패: 요율 정보가 부족한 행이 있습니다.")
 
     # 금액 계산
-    df["총금액"] = df["발송건수"] * df["요율"]
+    merged["총금액"] = merged["건수"] * merged["단가"]
 
-    return df
+    return merged
 
