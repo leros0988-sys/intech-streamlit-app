@@ -36,7 +36,6 @@ def load_rate_table(path: str | None = None):
     file_path = path or settings.get("rate_table_path", "rate_table.xlsx")
 
     if not os.path.exists(file_path):
-        # 여기서 에러 내지 말고 None 반환 (페이지에서 st.error)
         return None
 
     return pd.read_excel(file_path)
@@ -51,5 +50,4 @@ def load_partner_db(path: str | None = None):
         return None
 
     return pd.read_excel(file_path)
-
 

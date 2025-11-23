@@ -1,51 +1,192 @@
-# -------------------------
-# 이번 달 운영 요약 (정산서 수 = 카카오 SETTLE ID 유니크)
-# -------------------------
-st.markdown("### 📊 이번 달 운영 요약")
+import streamlit as st
 
-df = st.session_state.get("raw_settle_df")
+try:
+    from app.style import apply_global_styles
+except Exception:
+    def apply_global_styles():
+        pass
 
-total_statements = 0
-total_amount = 0
+from utils.loader import load_settings
 
-if df is not None:
 
-    # 카카오 SETTLE ID만 정산 기준
-    settle_col = "카카오 settle id"
+def main_page():
+    apply_global_styles()
+    settings = load_settings()
 
-    if settle_col in df.columns:
-        # 정산서 개수 = 카카오 settle id 유니크 개수
-        total_statements = df[settle_col].dropna().astype(str).nunique()
+    # ------------------------------------
+    # 상단 이미지
+    # ------------------------------------
+    st.markdown(
+        "<div style='display:flex; justify-content:center; margin-top:20px; margin-bottom:10px;'>",
+        unsafe_allow_html=True
+    )
+    st.image(settings.get("main_image_path", "app/images/imagesusagi_kuma.png"), width=380)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.write("")
+    st.write("")
+
+    # ------------------------------------
+    # 메인 제목
+    # ------------------------------------
+    st.markdown("""
+        <div class="title-text"
+            style="
+                font-size:38px;
+                font-weight:1200;
+                text-align:center;
+                margin-bottom:28px;">
+            📱 아이앤텍 전자고지 대금청구서 대시보드
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ------------------------------------
+    # 이번 달 정산 요약
+    # ------------------------------------
+    st.markdown("### 📊 이번 달 정산 요약")
+
+    df = st.session_state.get("raw_df")
+    total_statements = 0
+    total_amount = 0
+
+    if df is not None:
+        # 카카오 settle id 기준 정산서 개수
+        if "카카오 settle id" in df.columns:
+            total_statements = df["카카오 settle id"].dropna().astype(str).nunique()
+
+        # 금액 컬럼 탐색
+        amount_col = None
+        for cand in ["금액", "청구금액", "정산금액", "합계"]:
+            if cand in df.columns:
+                amount_col = cand
+                break
+
+        if amount_col:
+            total_amount = df[amount_col].fillna(0).sum()
+
+    st.markdown(
+        f"""
+        <div style="
+            background:white;
+            border-radius:12px;
+            padding:20px 25px;
+            margin-top:10px;
+            margin-bottom:35px;
+            box-shadow:0 2px 12px rgba(0,0,0,0.06);
+        ">
+            <h3 style="margin:0; padding:0; font-size:22px;">📌 이번 달 집계</h3>
+            <p style="font-size:17px; margin-top:10px;">
+                • 이번 달 대금청구서 개수(카카오 SETTLE 기준) : <b>{total_statements:,} 건</b><br>
+                • 총 정산 금액 : <b>{total_amount:,} 원</b><br>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ------------------------------------
+    # 환영 문구 + 이름 입력
+    # ------------------------------------
+    st.markdown("""
+        <div style="text-align:center; margin-bottom:20px;">
+            <h1 style="font-size:28px; font-weight:700; color:#333;">
+                환영합니다!  당신의 이름은 무엇인가요? 💖
+            </h1>
+        </div>
+    """, unsafe_allow_html=True)
+
+    username = st.text_input(
+        "",
+        placeholder="이름을 입력해주세요.",
+        label_visibility="collapsed"
+    )
+
+    if username.strip() != "":
+        st.markdown(f"""
+            <div style="
+                background:#fff7fb;
+                padding:18px 22px;
+                border-radius:12px;
+                margin-top:15px;
+                margin-bottom:30px;
+                text-align:center;
+                font-size:19px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.07);
+            ">
+                🌼 <strong>{username}</strong> 님,<br>
+                오늘도 고생 많아요. 따뜻하게 입고 다니세요. ❄️
+            </div>
+        """, unsafe_allow_html=True)
+
+    # ------------------------------------
+    # 운영 안내 (settings에 저장된 문구)
+    # ------------------------------------
+    st.markdown(
+        f"""
+        <div style="
+            background:white;
+            border-radius:12px;
+            padding:20px 25px;
+            margin-top:10px;
+            margin-bottom:35px;
+            box-shadow:0 2px 12px rgba(0,0,0,0.06);
+        ">
+            <h3 style="margin:0; padding:0; font-size:22px;">📌 운영 안내</h3>
+            <p style="font-size:17px; margin-top:10px;">
+                {settings.get("dashboard_text")}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ------------------------------------
+    # 방명록
+    # ------------------------------------
+    st.markdown("## 💬 방명록")
+
+    if "guestbook" not in st.session_state:
+        st.session_state.guestbook = []
+
+    writer_name = username if username.strip() != "" else "익명"
+    comment = st.text_area("남기고 싶은 말을 적어주세요 ✨", height=60)
+
+    if st.button("🌼 방명록 남기기"):
+        if comment.strip():
+            st.session_state.guestbook.append({"name": writer_name, "text": comment})
+            st.success("작성되었습니다!")
+            st.rerun()
+        else:
+            st.warning("내용을 입력해주세요!")
+
+    if len(st.session_state.guestbook) == 0:
+        st.info("아직 방명록이 비어있어요. 첫 글을 남겨보세요! ✏️")
     else:
-        st.warning("⚠️ 업로드한 엑셀에서 '카카오 settle id' 컬럼을 찾을 수 없습니다.")
+        for idx, item in enumerate(reversed(st.session_state.guestbook)):
+            real_idx = len(st.session_state.guestbook) - 1 - idx
 
-    # 금액 컬럼 찾기
-    amount_col = None
-    for cand in ["금액", "청구금액", "정산금액", "합계"]:
-        if cand in df.columns:
-            amount_col = cand
-            break
+            st.markdown(
+                f"""
+                <div style="
+                    background:#fff9fb;
+                    padding:14px 18px;
+                    border-radius:12px;
+                    margin-bottom:10px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+                ">
+                    <strong>{item['name']}</strong><br>
+                    <span style="font-size:16px;">{item['text']}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-    if amount_col:
-        total_amount = df[amount_col].fillna(0).sum()
+            if st.button("삭제하기", key=f"delete_{real_idx}"):
+                st.session_state.guestbook.pop(real_idx)
+                st.rerun()
 
-# UI 출력
-st.markdown(
-    f"""
-    <div style="
-        background:white;
-        border-radius:12px;
-        padding:20px 25px;
-        margin-top:10px;
-        margin-bottom:35px;
-        box-shadow:0 2px 12px rgba(0,0,0,0.06);
-    ">
-        <h3 style="margin:0; padding:0; font-size:22px;">📌 이번 달 정산 요약</h3>
-        <p style="font-size:17px; margin-top:10px;">
-            • 이번 달 총 <b>대금청구서</b> 개수 : <b>{total_statements:,} 건</b><br>
-            • 총 정산 금액 : <b>{total_amount:,} 원</b><br>
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+    # ------------------------------------
+    # 유튜브
+    # ------------------------------------
+    st.markdown("## 📺 쉬어가기...")
+    st.video(settings.get("youtube_url", "https://youtu.be/0f2x_3zlz4I"))

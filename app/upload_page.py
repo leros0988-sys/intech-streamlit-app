@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from utils.validator import validate_uploaded_df
 
 
 def upload_page():
@@ -17,10 +18,15 @@ def upload_page():
         st.error(f"엑셀 읽기 오류: {e}")
         return
 
-    # 세션에 저장 → 메인/카카오/KT/네이버 페이지에서 공통으로 사용
-    st.session_state["raw_settle_df"] = df
+    # 세션에 저장 → 다른 페이지에서 공통 사용
+    st.session_state["raw_df"] = df
 
     st.success(f"✅ 업로드 완료! (rows: {len(df)})")
+
+    # 검증 메시지
+    warnings = validate_uploaded_df(df)
+    for msg in warnings:
+        st.warning(msg)
 
     st.markdown("### 🔎 원본 일부")
     st.dataframe(df.head(50), use_container_width=True)
@@ -29,13 +35,13 @@ def upload_page():
     st.markdown("### 📊 간단 집계")
 
     total_rows = len(df)
+    st.write(f"- 총 행 수: **{total_rows:,}**")
+
     amount_col = None
     for cand in ["금액", "청구금액", "정산금액", "합계"]:
         if cand in df.columns:
             amount_col = cand
             break
-
-    st.write(f"- 총 행 수: **{total_rows:,}**")
 
     if amount_col:
         total_amount = df[amount_col].fillna(0).sum()
