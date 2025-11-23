@@ -26,8 +26,8 @@ def main_page():
     st.markdown("""
         <div class="title-text"
             style="
-                font-size:38px;
-                font-weight:1200;
+                font-size:34px;
+                font-weight:900;
                 text-align:center;
                 margin-bottom:28px;">
             📱 아이앤텍 전자고지 대금청구서 대시보드 📱
