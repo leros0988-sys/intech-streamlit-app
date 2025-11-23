@@ -34,10 +34,6 @@ def main_page():
         </div>
     """, unsafe_allow_html=True)
 
-    # ------------------------------------
-    # 이번 달 정산 요약
-    # ------------------------------------
-    st.markdown("### 📊 이번 달 정산 요약")
 
     df = st.session_state.get("raw_df")
     total_statements = 0
@@ -68,10 +64,33 @@ def main_page():
             margin-bottom:35px;
             box-shadow:0 2px 12px rgba(0,0,0,0.06);
         ">
-            <h3 style="margin:0; padding:0; font-size:22px;">📌 이번 달 집계</h3>
+            <h3 style="margin:0; padding:0; font-size:22px;">📊 12월 정산 요약</h3>
             <p style="font-size:17px; margin-top:10px;">
-                • 12월 총 대금청구서 개수 : <b>{total_statements:,} 건</b><br>
+                • 12월 총 대금청구서 : <b>{total_statements:,} 건</b><br>
                 • 12월 총 정산 금액 : <b>{total_amount:,} 원</b><br>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ------------------------------------
+    # 공지사항 (settings에 저장된 문구)
+    # ------------------------------------
+    
+    st.markdown(
+        f"""
+        <div style="
+            background:white;
+            border-radius:12px;
+            padding:20px 25px;
+            margin-top:10px;
+            margin-bottom:35px;
+            box-shadow:0 2px 12px rgba(0,0,0,0.06);
+        ">
+            <h3 style="margin:0; padding:0; font-size:22px;">📌 운영 안내</h3>
+            <p style="font-size:17px; margin-top:10px;">
+                {settings.get("dashboard_text")}
             </p>
         </div>
         """,
@@ -112,29 +131,6 @@ def main_page():
             </div>
         """, unsafe_allow_html=True)
 
-
-    # ------------------------------------
-    # 공지사항 (settings에 저장된 문구)
-    # ------------------------------------
-    
-    st.markdown(
-        f"""
-        <div style="
-            background:white;
-            border-radius:12px;
-            padding:20px 25px;
-            margin-top:10px;
-            margin-bottom:35px;
-            box-shadow:0 2px 12px rgba(0,0,0,0.06);
-        ">
-            <h3 style="margin:0; padding:0; font-size:22px;">📌 운영 안내</h3>
-            <p style="font-size:17px; margin-top:10px;">
-                {settings.get("dashboard_text")}
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
     # ------------------------------------
     # 방명록
