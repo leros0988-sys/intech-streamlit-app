@@ -2,7 +2,7 @@ import streamlit as st
 from app.utils.loader import load_settings, save_settings
 
 def settings_page():
-    st.markdown("## ⚙️ 설정 메뉴")
+    st.markdown("<div class='title-text'>⚙ 설정</div>", unsafe_allow_html=True)
 
     settings = load_settings()
 

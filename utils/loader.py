@@ -1,7 +1,8 @@
 import json
+import os
 import pandas as pd
 
-SETTINGS_FILE = "settings.json"
+SETTINGS_PATH = os.path.join("app", "utils", "settings.json")
 
 
 def load_settings():
