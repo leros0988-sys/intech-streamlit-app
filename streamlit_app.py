@@ -9,7 +9,6 @@ from app.main_page import main_page
 
 # 스타일
 from app.style import apply_global_styles
-apply_global_styles()
 
 # 페이지들
 from app.login_page import login_page
