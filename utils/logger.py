@@ -1,3 +1,4 @@
+print("🔥 logger.py loaded")
 import csv
 from datetime import datetime
 from pathlib import Path   # ★★★ 여기 추가해야 NameError가 사라짐 ★★★
