@@ -1,7 +1,5 @@
 import streamlit as st
-import streamlit as st
 from app.utils.loader import load_settings
-from app.utils.logger import log_login_attempt
 
 # ------------------------
 # 일반 사용자 1명
