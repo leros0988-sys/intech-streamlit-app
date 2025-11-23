@@ -5,7 +5,6 @@ sys.path.append(str(Path(__file__).resolve().parent))
 import streamlit as st
 from app.login_page import login_page
 from app.main_page import main_page
-...
 
 
 # 스타일
