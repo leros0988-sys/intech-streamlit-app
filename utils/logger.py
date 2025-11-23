@@ -1,10 +1,9 @@
-print("🔥 logger.py loaded")
+from pathlib import Path   # ★★★ 반드시 필요 — NameError 해결 ★★★
 import csv
 from datetime import datetime
-from pathlib import Path   # ★★★ 여기 추가해야 NameError가 사라짐 ★★★
 
-LOG_FILE = Path("login_logs.csv")
-
+# 로그 파일을 utils 폴더 내부에 자동 생성
+LOG_FILE = Path(__file__).parent / "login_logs.csv"
 
 def write_log(username: str, event: str):
     """로그 기록"""
@@ -15,17 +14,8 @@ def write_log(username: str, event: str):
     with open(LOG_FILE, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
 
+        # 첫 생성 시 헤더 넣기
         if not file_exists:
             writer.writerow(["timestamp", "username", "event"])
 
         writer.writerow([now, username, event])
-
-
-def read_logs():
-    """로그 전체 읽기"""
-    if not LOG_FILE.exists():
-        return []
-
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        return list(reader)
