@@ -1,53 +1,47 @@
 import streamlit as st
 
 def apply_global_styles():
-    st.markdown("""
-    <style>
-    .stApp {
-        background: #ffe6ec !important;
-        font-family: "Pretendard", "Noto Sans JP", sans-serif;
-    }
+    st.markdown(
+        """
+        <style>
 
-    /* 제목 */
-    .title-text {
-        font-size: 42px;
-        font-weight: 900;
-        text-align: center;
-        color: #333;
-        margin-top: 20px;
-    }
+        /* 전체 배경 */
+        .stApp {
+            background-color: #FFEFF4 !important;
+        }
 
-    .subtitle-text {
-        font-size: 20px;
-        text-align: center;
-        color: #666;
-        margin-bottom: 25px;
-    }
+        /* 사이드바 배경 → 흰색 */
+        [data-testid="stSidebar"] {
+            background-color: #FFFFFF !important;
+        }
 
-    /* 귀여운 박스 */
-    .cute-box {
-        background: white;
-        padding: 25px;
-        border-radius: 18px;
-        border: 2px solid #ffb6c9;
-        box-shadow: 2px 2px 10px rgba(255, 150, 170, 0.25);
-        margin-top: 20px;
-    }
+        /* 사이드바 내부 패딩 조절 */
+        [data-testid="stSidebar"] > div {
+            padding-top: 20px !important;
+        }
 
-    /* 버튼 스타일 */
-    .stButton>button {
-        background-color: #ff8fb5;
-        color: white;
-        border-radius: 10px;
-        border: none;
-        padding: 10px 25px;
-        font-size: 16px;
-        font-weight: bold;
-    }
+        /* 사이드바 라디오 버튼(메뉴) 글자 크기 */
+        div[role="radiogroup"] > label > div {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;   /* 글자 약간 두껍게 */
+        }
 
-    .stButton>button:hover {
-        background-color: #ff6f9f;
-    }
+        /* 사이드바 이모지(앞줄의 아이콘) 숨기기 */
+        .css-1y4p8pa, .css-12w0qpk {
+            display: none !important;
+        }
 
-    </style>
-    """, unsafe_allow_html=True)
+        /* 메뉴 선택된 항목 강조 */
+        div[role="radiogroup"] > label[aria-checked="true"] > div {
+            color: #D6336C !important;
+        }
+
+        /* 메인 컨테이너 여백 */
+        .block-container {
+            padding-top: 2rem !important;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
