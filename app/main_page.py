@@ -108,13 +108,13 @@ def main_page():
                 box-shadow:0 2px 8px rgba(0,0,0,0.07);
             ">
                 🌼 <strong>{username}</strong> 님,<br>
-                오늘도 고생 많아요. 따뜻하게 입고 다니세요. ❄️
+                날씨가 많이 추워졌네요. 따숩게 입고 다니세요. ❄️
             </div>
         """, unsafe_allow_html=True)
 
 
     # ------------------------------------
-    # 운영 안내 (settings에 저장된 문구)
+    # 공지사항 (settings에 저장된 문구)
     # ------------------------------------
     
     st.markdown(
