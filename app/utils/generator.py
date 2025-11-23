@@ -1,11 +1,13 @@
 import pandas as pd
 import io
 
-def generate_bill(bill_df, save_path="대금청구서.xlsx"):
-    bill_df.to_excel(save_path, index=False)
-    return save_path
+def generate_settlement_excel(df: pd.DataFrame) -> bytes:
+    """
+    DataFrame → 엑셀 파일 bytes 변환
+    """
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        df.to_excel(w, index=False)
 
-def generate_document(doc_df, save_path="기안자료.xlsx"):
-    doc_df.to_excel(save_path, index=False)
-    return save_path
-
+    buf.seek(0)
+    return buf.read()
