@@ -70,8 +70,8 @@ def main_page():
         ">
             <h3 style="margin:0; padding:0; font-size:22px;">📌 이번 달 집계</h3>
             <p style="font-size:17px; margin-top:10px;">
-                • 이번 달 대금청구서 개수(카카오 SETTLE 기준) : <b>{total_statements:,} 건</b><br>
-                • 총 정산 금액 : <b>{total_amount:,} 원</b><br>
+                • 12월 총 대금청구서 개수 : <b>{total_statements:,} 건</b><br>
+                • 12월 총 정산 금액 : <b>{total_amount:,} 원</b><br>
             </p>
         </div>
         """,

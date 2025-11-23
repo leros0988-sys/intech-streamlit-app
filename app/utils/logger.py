@@ -1,13 +1,14 @@
 import csv
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
-# utils 폴더 바로 아래에 login_logs.csv 생성
-LOG_FILE = Path(__file__).resolve().parent / "login_logs.csv"
+# login_logs.csv 파일 경로
+LOG_FILE = Path(__file__).resolve().parent.parent / "login_logs.csv"
 
 
 def write_log(username: str, event: str):
-    """로그 기록 (성공/실패)"""
+    """로그인 성공/실패 기록"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     file_exists = LOG_FILE.exists()
 
@@ -18,15 +19,13 @@ def write_log(username: str, event: str):
         writer.writerow([now, username, event])
 
 
-def load_login_logs():
-    """로그 파일 읽기"""
+def load_login_logs() -> pd.DataFrame:
+    """CSV 읽어서 DataFrame 형태로 반환"""
     if not LOG_FILE.exists():
-        return []
+        # 파일 없으면 빈 DataFrame 반환
+        return pd.DataFrame(columns=["timestamp", "username", "event"])
 
-    rows = []
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # 헤더 스킵
-        for row in reader:
-            rows.append(row)
-    return rows
+    try:
+        return pd.read_csv(LOG_FILE, encoding="utf-8")
+    except Exception:
+        return pd.DataFrame(columns=["timestamp", "username", "event"])
