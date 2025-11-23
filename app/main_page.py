@@ -112,9 +112,11 @@ def main_page():
             </div>
         """, unsafe_allow_html=True)
 
+
     # ------------------------------------
     # 운영 안내 (settings에 저장된 문구)
     # ------------------------------------
+    
     st.markdown(
         f"""
         <div style="
