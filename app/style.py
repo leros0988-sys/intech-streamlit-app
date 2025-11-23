@@ -2,34 +2,53 @@ import streamlit as st
 
 def apply_global_styles():
     st.markdown("""
-        <style>
+    <style>
+    .stApp {
+        background: #ffe6ec !important;
+        font-family: "Pretendard", "Noto Sans JP", sans-serif;
+    }
 
-        /* 전체 배경 */
-        .stApp {
-            background-color: #FFEDEF !important;
-        }
+    /* 제목 */
+    .title-text {
+        font-size: 42px;
+        font-weight: 900;
+        text-align: center;
+        color: #333;
+        margin-top: 20px;
+    }
 
-        /* 사이드바 기본 배경 (원래 회색 + 흰색 느낌) */
-        section[data-testid="stSidebar"] {
-            background-color: white !important;
-            border-right: 1px solid #e6e6e6 !important;
-        }
+    .subtitle-text {
+        font-size: 20px;
+        text-align: center;
+        color: #FFFFFF;
+        margin-bottom: 25px;
+    }
 
-        /* 사이드바 메뉴 폰트 원래 크기 */
-        [data-testid="stSidebar"] * {
-            font-size: 16px !important;
-        }
+    /* 귀여운 박스 */
+    .cute-box {
+        background: white;
+        padding: 25px;
+        border-radius: 18px;
+        border: 2px solid #ffb6c9;
+        box-shadow: 2px 2px 10px rgba(255, 150, 170, 0.25);
+        margin-top: 20px;
+    }
 
-        /* 라디오버튼 (메뉴) 기본 스타일 유지 */
-        .stRadio > label {
-            font-size: 16px !important;
-        }
+    /* 버튼 스타일 */
+    .stButton>button {
+        background-color: #ff8fb5;
+        color: white;
+        border-radius: 10px;
+        border: none;
+        padding: 10px 25px;
+        font-size: 16px;
+        font-weight: bold;
+    }
 
-        /* 입력창 디자인 (로그인 포함) */
-        input[type="text"], input[type="password"] {
-            background-color: #F4F7FA !important;
-            border-radius: 6px !important;
-        }
+    .stButton>button:hover {
+        background-color: #ff6f9f;
+    }
 
-        </style>
+    </style>
     """, unsafe_allow_html=True)
+
