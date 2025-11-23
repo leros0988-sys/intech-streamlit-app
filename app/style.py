@@ -30,7 +30,7 @@ def apply_global_styles():
 
         /* 메인 본문 글자 */
         .stMarkdown, p, label, span {
-            font-size: 16px !important;
+            font-size: 40px !important;
         }
 
         /* 제목 스타일 */
