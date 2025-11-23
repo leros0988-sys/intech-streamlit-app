@@ -1,5 +1,6 @@
 import streamlit as st
-from app.utils.loader import load_settings
+from app.utils.loader import load_settings, save_settings
+from app.utils.logger import write_log
 
 # ------------------------
 # 일반 사용자 1명
