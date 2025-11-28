@@ -1,10 +1,18 @@
+# app/finance_page.py
+
 import streamlit as st
 import pandas as pd
+import io
 
 from app.utils.loader import load_rate_table, load_partner_db
-from app.utils.validator import validate_uploaded_df
+from app.utils.validator import validate_uploaded_files
 from app.utils.calculator import calculate_settlement
-from app.utils.generator import generate_settlement_excel
+from app.utils.generator import (
+    generate_settlement_excel,
+    generate_bill,
+    generate_draft_text,
+)
+
 
 def _df_to_excel_bytes(df: pd.DataFrame) -> bytes:
     buf = io.BytesIO()
@@ -38,12 +46,17 @@ def finance_page():
 
     uploaded_files = st.file_uploader(
         "카카오 / KT / 네이버 통계 엑셀을 모두 선택해서 올려줘 (여러 개 선택 가능)",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        key="settle_upload",
+        type=["xlsx", "xls"],           # ← xlsx/xls 둘 다
+        accept_multiple_files=True,     # ← **여러 개**
+        key="settle_upload_finance",    # ← 다른 페이지랑 절대 안 겹치게
     )
 
+    # ❗ 업로드 결과 바로 보여주기 (여기서부터가 핵심)
     if uploaded_files:
+        st.info(f"현재 업로드된 파일 개수: **{len(uploaded_files)}개**")
+        for f in uploaded_files:
+            st.write(f"· {f.name}")
+
         try:
             validated = validate_uploaded_files(uploaded_files)
         except Exception as e:
@@ -91,10 +104,10 @@ def finance_page():
 
         st.markdown("### 3) 정산 결과 요약")
 
-        # 기관별 / 부서별 집계
         group_cols = ["기관명", "부서명"]
-        if not all(col in settled_df.columns for col in group_cols):
-            st.error("정산 결과에 기관명/부서명 컬럼이 없습니다. 컬럼명을 다시 확인해주세요.")
+        if not all(col in settled_df.columns for col in group_cols + ["총금액"]):
+            st.error("정산 결과에 기관명/부서명/총금액 컬럼이 없습니다.")
+            summary = None
         else:
             summary = (
                 settled_df.groupby(group_cols)["총금액"]
@@ -102,12 +115,24 @@ def finance_page():
                 .reset_index()
                 .sort_values(["기관명", "부서명"])
             )
+            st.subheader("기관 / 부서별 정산 합계")
             st.dataframe(summary, use_container_width=True)
 
-        # --- 4) 선택 다운로드 --------------------------------------------
+        # 플랫폼별 요약 (있으면)
+        if "__플랫폼" in settled_df.columns:
+            plat_summary = (
+                settled_df.groupby("__플랫폼")["총금액"]
+                .sum()
+                .reset_index()
+                .sort_values("__플랫폼")
+            )
+            st.subheader("플랫폼(카카오/KT/네이버)별 정산 합계")
+            st.dataframe(plat_summary, use_container_width=True)
+
+        # --- 4) 정산 결과 다운로드 --------------------------------------------
         st.markdown("### 4) 정산 결과 다운로드")
 
-        기관_list = sorted(settled_df.get("기관명", []))
+        기관_list = sorted(set(settled_df.get("기관명", [])))
         selected_기관 = st.multiselect(
             "다운로드할 기관을 선택하세요. (선택 안 하면 전체 다운로드)",
             기관_list,
@@ -138,14 +163,34 @@ def finance_page():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        # 대금청구서 양식 그대로 쓰고 싶으면 여기서 generate_bill 호출
-        if st.button("🧾 대금청구서용 원본 엑셀 생성"):
+        # 대금청구서용 엑셀 (기관별 sheet)
+        if st.button("🧾 대금청구서용 원본 엑셀 생성 (로컬 저장)"):
             path = generate_bill(settled_df, save_path="대금청구서_원본.xlsx")
-            st.success(f"로컬 경로에 '{path}' 로 저장되었습니다. (Streamlit 클라우드에서는 로컬 파일은 참고용)")
+            st.success(f"로컬 경로에 '{path}' 로 저장되었습니다. (클라우드 환경에서는 경로만 참고)")
 
-    # --- 5) 특이사항 로그 (매핑 누락) -----------------------------------
+        # --- 5) 기안문 자동 생성 ---------------------------------------------
+        st.markdown("---")
+        st.markdown("### 5) 기안문 자동 생성")
+
+        default_period = "2025년 ○월분"
+        period_label = st.text_input("정산 대상 기간(예: 2025년 9월분)", value=default_period)
+
+        if summary is not None:
+            if st.button("📄 기안문 초안 생성"):
+                draft_text = generate_draft_text(summary, period_label)
+                st.text_area("기안문 초안", draft_text, height=400)
+
+                draft_bytes = draft_text.encode("utf-8")
+                st.download_button(
+                    "📥 기안문 텍스트 다운로드 (.txt)",
+                    data=draft_bytes,
+                    file_name="전자고지_정산_기안문.txt",
+                    mime="text/plain",
+                )
+
+    # --- 6) 특이사항 로그 -----------------------------------
     st.markdown("---")
-    st.markdown("### 5) 특이사항 로그 (요율 매칭 누락, 기관/부서/문서 오류)")
+    st.markdown("### 6) 특이사항 로그 (요율 매칭 누락, 기관/부서/문서 오류)")
 
     issues_df: pd.DataFrame | None = st.session_state.get("issues_df")
     if issues_df is None or issues_df.empty:
@@ -161,10 +206,6 @@ def finance_page():
             file_name="정산_특이사항로그.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-
-
-
-
 
 
 
