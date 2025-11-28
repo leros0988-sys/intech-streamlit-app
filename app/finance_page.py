@@ -1,5 +1,3 @@
-# app/finance_page.py
-
 import streamlit as st
 import pandas as pd
 import io
@@ -7,14 +5,10 @@ import io
 from app.utils.loader import load_rate_table, load_partner_db
 from app.utils.validator import validate_uploaded_files
 from app.utils.calculator import calculate_settlement
-from app.utils.generator import (
-    generate_settlement_excel,
-    generate_bill,
-    generate_draft_text,
-)
+from app.utils.generator import generate_settlement_excel
 
 
-def _df_to_excel_bytes(df: pd.DataFrame) -> bytes:
+def df_to_excel_bytes(df: pd.DataFrame) -> bytes:
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
@@ -25,187 +19,89 @@ def _df_to_excel_bytes(df: pd.DataFrame) -> bytes:
 def finance_page():
     st.markdown("## 💰 정산 업로드 및 전체 통계자료")
 
-    # --- 0) 기준 DB 로드 -------------------------------------------------
+    # DB 로드
     try:
         rate_db = load_rate_table()
         partner_db = load_partner_db()
     except Exception as e:
-        st.error(f"기준 DB 로드 오류: {e}")
+        st.error(f"DB 로드 오류: {e}")
         return
 
-    with st.expander("📂 로드된 기준 DB 확인하기", expanded=False):
-        st.write("### 요율표 (rate_table.xlsx)")
-        st.dataframe(rate_db.head(30), use_container_width=True)
-        st.write("### 기관 담당자 정보 DB")
-        st.dataframe(partner_db.head(30), use_container_width=True)
+    with st.expander("📂 기준 DB 확인"):
+        st.dataframe(rate_db.head(20))
+        st.dataframe(partner_db.head(20))
 
-    st.markdown("---")
-
-    # --- 1) 통계자료 업로드 ----------------------------------------------
-    st.markdown("### 1) 통계자료 엑셀 업로드")
-
+    st.markdown("### 1) 통계자료 업로드")
     uploaded_files = st.file_uploader(
-        "카카오 / KT / 네이버 통계 엑셀을 모두 선택해서 올려줘 (여러 개 선택 가능)",
-        type=["xlsx", "xls"],           # ← xlsx/xls 둘 다
-        accept_multiple_files=True,     # ← **여러 개**
-        key="settle_upload_finance",    # ← 다른 페이지랑 절대 안 겹치게
+        "카카오/KT/네이버 통계 엑셀 여러 개 업로드 가능",
+        type=["xlsx"],
+        accept_multiple_files=True,
+        key="settle_upload_finance"
     )
 
-    # ❗ 업로드 결과 바로 보여주기 (여기서부터가 핵심)
     if uploaded_files:
-        st.info(f"현재 업로드된 파일 개수: **{len(uploaded_files)}개**")
-        for f in uploaded_files:
-            st.write(f"· {f.name}")
-
         try:
             validated = validate_uploaded_files(uploaded_files)
         except Exception as e:
-            st.error(f"업로드 파일 검증 실패: {e}")
+            st.error(f"파일 검증 오류: {e}")
             return
 
         dfs = []
-        for name, df in validated.items():
-            tmp = df.copy()
-            tmp["__source_file"] = name
-            dfs.append(tmp)
+        for fname, df in validated.items():
+            df["원본파일"] = fname
+            dfs.append(df)
 
-        try:
-            raw_df = pd.concat(dfs, ignore_index=True)
-        except ValueError:
-            st.error("업로드된 파일에 유효한 데이터가 없습니다.")
-            return
+        merged = pd.concat(dfs, ignore_index=True)
 
-        st.session_state["raw_settle_df"] = raw_df
-        st.success(f"✅ {len(uploaded_files)}개 파일 업로드 및 병합 완료.")
+        st.session_state["raw_settle_df"] = merged
+        st.success(f"총 {len(uploaded_files)}개 파일 업로드 성공")
 
-        with st.expander("업로드 원본 미리보기", expanded=False):
-            st.dataframe(raw_df.head(100), use_container_width=True)
+        with st.expander("업로드 원본 미리보기"):
+            st.dataframe(merged.head(50))
 
     st.markdown("---")
 
-    # --- 2) 정산 계산 ----------------------------------------------------
     if "raw_settle_df" in st.session_state:
-        st.markdown("### 2) 요율표 기준 정산 계산")
-
-        if st.button("🔢 정산 계산 실행하기"):
+        if st.button("🔢 정산 계산 실행"):
             try:
-                settled_df, issues_df = calculate_settlement(
-                    st.session_state["raw_settle_df"], rate_db
-                )
-                st.session_state["settled_df"] = settled_df
-                st.session_state["issues_df"] = issues_df
-                st.success("정산 계산이 완료되었습니다.")
+                settled, issues = calculate_settlement(st.session_state["raw_settle_df"], rate_db)
+                st.session_state["settled_df"] = settled
+                st.session_state["issues_df"] = issues
+                st.success("정산 계산 완료!")
             except Exception as e:
-                st.error(f"정산 계산 중 오류: {e}")
+                st.error(f"정산 오류: {e}")
 
-    # --- 3) 정산 결과 요약 -----------------------------------------------
     if "settled_df" in st.session_state:
-        settled_df: pd.DataFrame = st.session_state["settled_df"]
-
+        settled_df = st.session_state["settled_df"]
         st.markdown("### 3) 정산 결과 요약")
 
-        group_cols = ["기관명", "부서명"]
-        if not all(col in settled_df.columns for col in group_cols + ["총금액"]):
-            st.error("정산 결과에 기관명/부서명/총금액 컬럼이 없습니다.")
-            summary = None
-        else:
-            summary = (
-                settled_df.groupby(group_cols)["총금액"]
-                .sum()
-                .reset_index()
-                .sort_values(["기관명", "부서명"])
-            )
-            st.subheader("기관 / 부서별 정산 합계")
-            st.dataframe(summary, use_container_width=True)
+        기관_list = sorted(settled_df["기관명"].unique())
+        선택기관 = st.multiselect("다운로드할 기관 선택", 기관_list)
 
-        # 플랫폼별 요약 (있으면)
-        if "__플랫폼" in settled_df.columns:
-            plat_summary = (
-                settled_df.groupby("__플랫폼")["총금액"]
-                .sum()
-                .reset_index()
-                .sort_values("__플랫폼")
-            )
-            st.subheader("플랫폼(카카오/KT/네이버)별 정산 합계")
-            st.dataframe(plat_summary, use_container_width=True)
+        결과 = settled_df if not 선택기관 else settled_df[settled_df["기관명"].isin(선택기관)]
 
-        # --- 4) 정산 결과 다운로드 --------------------------------------------
-        st.markdown("### 4) 정산 결과 다운로드")
-
-        기관_list = sorted(set(settled_df.get("기관명", [])))
-        selected_기관 = st.multiselect(
-            "다운로드할 기관을 선택하세요. (선택 안 하면 전체 다운로드)",
-            기관_list,
-        )
-
-        if selected_기관:
-            filtered = settled_df[settled_df["기관명"].isin(selected_기관)]
-        else:
-            filtered = settled_df
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            excel_bytes_selected = _df_to_excel_bytes(filtered)
-            st.download_button(
-                "📥 선택 기관만 엑셀 다운로드",
-                data=excel_bytes_selected,
-                file_name="정산결과_선택기관.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        with col2:
-            excel_bytes_all = _df_to_excel_bytes(settled_df)
-            st.download_button(
-                "📥 전체 정산결과 엑셀 다운로드",
-                data=excel_bytes_all,
-                file_name="정산결과_전체.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        # 대금청구서용 엑셀 (기관별 sheet)
-        if st.button("🧾 대금청구서용 원본 엑셀 생성 (로컬 저장)"):
-            path = generate_bill(settled_df, save_path="대금청구서_원본.xlsx")
-            st.success(f"로컬 경로에 '{path}' 로 저장되었습니다. (클라우드 환경에서는 경로만 참고)")
-
-        # --- 5) 기안문 자동 생성 ---------------------------------------------
-        st.markdown("---")
-        st.markdown("### 5) 기안문 자동 생성")
-
-        default_period = "2025년 ○월분"
-        period_label = st.text_input("정산 대상 기간(예: 2025년 9월분)", value=default_period)
-
-        if summary is not None:
-            if st.button("📄 기안문 초안 생성"):
-                draft_text = generate_draft_text(summary, period_label)
-                st.text_area("기안문 초안", draft_text, height=400)
-
-                draft_bytes = draft_text.encode("utf-8")
-                st.download_button(
-                    "📥 기안문 텍스트 다운로드 (.txt)",
-                    data=draft_bytes,
-                    file_name="전자고지_정산_기안문.txt",
-                    mime="text/plain",
-                )
-
-    # --- 6) 특이사항 로그 -----------------------------------
-    st.markdown("---")
-    st.markdown("### 6) 특이사항 로그 (요율 매칭 누락, 기관/부서/문서 오류)")
-
-    issues_df: pd.DataFrame | None = st.session_state.get("issues_df")
-    if issues_df is None or issues_df.empty:
-        st.info("현재까지 기록된 특이사항이 없습니다.")
-    else:
-        st.warning(f"⚠ 요율 매칭 실패 행 {len(issues_df)}건이 있습니다. 아래 데이터를 확인해주세요.")
-        st.dataframe(issues_df, use_container_width=True)
-
-        issues_bytes = _df_to_excel_bytes(issues_df)
         st.download_button(
-            "📥 특이사항 로그 엑셀 다운로드",
-            data=issues_bytes,
-            file_name="정산_특이사항로그.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "📥 선택 기관 다운로드",
+            data=df_to_excel_bytes(결과),
+            file_name="정산_선택기관.xlsx"
         )
 
+        st.download_button(
+            "📥 전체 정산 다운로드",
+            data=df_to_excel_bytes(settled_df),
+            file_name="정산_전체.xlsx"
+        )
+
+    st.markdown("### 4) 특이사항 로그")
+    if "issues_df" in st.session_state and not st.session_state["issues_df"].empty:
+        issues_df = st.session_state["issues_df"]
+        st.warning(f"⚠ 매칭 실패 {len(issues_df)}건")
+        st.dataframe(issues_df)
+
+        st.download_button(
+            "📥 특이사항 다운로드",
+            data=df_to_excel_bytes(issues_df),
+            file_name="정산_특이사항.xlsx"
+        )
 
 

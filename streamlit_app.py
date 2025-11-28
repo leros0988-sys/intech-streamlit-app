@@ -3,9 +3,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent))
 
 import streamlit as st
-from app.login_page import login_page
-from app.main_page import main_page
-
 
 # 스타일
 from app.style import apply_global_styles
@@ -24,36 +21,27 @@ from app.logs_page import logs_page
 from app.admin_page import admin_page
 from app.settings_page import settings_page
 
-# -------------------------------------------------------
-# Session 초기값 설정
-# -------------------------------------------------------
+# Session 초기값
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# -------------------------------------------------------
-# 페이지 라우팅
-# -------------------------------------------------------
+
 def run_app():
 
     apply_global_styles()
 
-    # ------------------------------
-    # 로그인 안 되었으면 로그인 페이지로
-    # ------------------------------
     if not st.session_state.logged_in:
         login_page()
         return
 
-    # ------------------------------
-    # 로그인 이후: 좌측 메뉴
-    # ------------------------------
     menu = st.sidebar.radio(
         "📌 메뉴",
         [
             "메인 대시보드",
             "정산 업로드 및 전체 통계자료",
+            "업로드 안내",
             "카카오 통계자료",
             "KT 통계자료",
             "네이버 통계자료",
@@ -66,12 +54,11 @@ def run_app():
         ]
     )
 
-    # ------------------------------
-    # 메뉴 이동
-    # ------------------------------
     if menu == "메인 대시보드":
         main_page()
     elif menu == "정산 업로드 및 전체 통계자료":
+        finance_page()
+    elif menu == "업로드 안내":
         upload_page()
     elif menu == "카카오 통계자료":
         kakao_stats_page()
@@ -91,13 +78,8 @@ def run_app():
         settings_page()
     elif menu == "로그아웃":
         st.session_state.logged_in = False
-        st.session_state.user = None
-        st.session_state.page = "login"
         st.rerun()
 
 
-# -------------------------------------------------------
-# 앱 실행
-# -------------------------------------------------------
 if __name__ == "__main__":
     run_app()
