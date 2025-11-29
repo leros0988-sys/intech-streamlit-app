@@ -1,6 +1,7 @@
 import streamlit as st
-from app.utils.loader import load_settings, save_settings
+from app.utils.loader import load_settings
 from app.utils.logger import write_log
+
 
 # ------------------------
 # 일반 사용자 1명
@@ -21,7 +22,7 @@ def login_page():
     settings = load_settings()
     fail_limit = int(settings.get("login_fail_limit", 5))
 
-    # 실패횟수 초기화
+    # 실패 횟수 초기화
     if "login_fail_count" not in st.session_state:
         st.session_state.login_fail_count = 0
     if "locked" not in st.session_state:
@@ -75,4 +76,3 @@ def login_page():
                 st.error("로그인 실패 횟수 초과로 계정이 잠겼습니다.")
             else:
                 st.error(f"IDまたはパスワードが正しくありません (남은 시도 {remain}회)")
-
