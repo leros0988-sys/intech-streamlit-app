@@ -9,18 +9,20 @@ from reportlab.lib.pagesizes import A4
 from app.utils.loader import load_manager_db  # 담당자 DB 로드
 
 
-def _normalize_org(df: pd.DataFrame) -> pd.DataFrame:
-    """기관 컬럼 통일"""
-    df = df.copy()
-    if "기관" in df.columns:
-        return df
-    if "기관명" in df.columns:
-        df.rename(columns={"기관명": "기관"}, inplace=True)
-    elif "이용기관명" in df.columns:
-        df.rename(columns={"이용기관명": "기관"}, inplace=True)
-    else:
-        df["기관"] = "미지정"
-    return df
+def load_manager_db() -> pd.DataFrame:
+    """
+    기관 담당자 DB 로드 함수
+    (기존 partner_db 와는 별도의 manager_db 파일을 사용한다고 가정)
+    """
+    MANAGER_DB_FILE = BASE / "utils" / "manager_db.xlsx"
+
+    if not MANAGER_DB_FILE.exists():
+        raise RuntimeError("manager_db.xlsx 파일이 존재하지 않습니다.")
+
+    try:
+        return pd.read_excel(MANAGER_DB_FILE)
+    except Exception as e:
+        raise RuntimeError(f"담당자 DB 로드 오류: {e}")
 
 
 def _summarize_settle(df: pd.DataFrame) -> pd.DataFrame:
