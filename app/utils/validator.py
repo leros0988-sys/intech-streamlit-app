@@ -4,16 +4,13 @@ from typing import Dict
 import pandas as pd
 from app.utils.file_reader import read_any_file
 
-
-def validate_uploaded_files(files) -> Dict[str, pd.DataFrame]:
+def validate_uploaded_files(files) -> Dict[str, Dict[str, pd.DataFrame]]:
     """
-    업로드된 파일들을 안전하게 읽어 DataFrame만 반환하는 검증기.
-    - 파일 하나라도 실패하면 해당 파일은 제외
-    - None, 빈 DF 절대 허용하지 않음
-    - 항상 dict[str, DataFrame] 형태로만 반환
+    파일명 → 시트명 → DF 구조로 반환.
+    (upload_page가 요구하는 정확한 형태)
     """
 
-    validated = {}
+    validated: Dict[str, Dict[str, pd.DataFrame]] = {}
 
     for f in files:
         name = f.name
@@ -21,21 +18,14 @@ def validate_uploaded_files(files) -> Dict[str, pd.DataFrame]:
         try:
             df = read_any_file(f)
 
-            # 완전 무결성 검증
-            if df is None:
-                raise ValueError("None 반환됨")
+            if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+                raise ValueError("유효한 데이터가 아님")
 
-            if not isinstance(df, pd.DataFrame):
-                raise ValueError("DataFrame이 아님")
-
-            if df.empty:
-                raise ValueError("빈 파일")
-
-            validated[name] = df
+            # ✔ 하나의 파일을 "단일 시트" 형태로 묶어서 반환
+            validated[name] = { "Sheet1": df }
 
         except Exception as e:
             print(f"[validator] '{name}' 읽기 실패: {e}")
-            # 실패한 파일은 절대 validated에 넣지 않는다.
             continue
 
     return validated
