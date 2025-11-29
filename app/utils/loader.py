@@ -65,3 +65,15 @@ def load_partner_db() -> pd.DataFrame:
         return pd.read_excel(PARTNER_DB_FILE)
     except Exception as e:
         raise RuntimeError(f"기관 담당자 DB 로드 오류: {e}")
+
+def load_manager_db() -> pd.DataFrame:
+    """기관 담당자 DB 로드"""
+    MANAGER_DB_FILE = BASE / "utils" / "manager_db.xlsx"
+
+    if not MANAGER_DB_FILE.exists():
+        raise RuntimeError("manager_db.xlsx 파일이 존재하지 않습니다.")
+
+    try:
+        return pd.read_excel(MANAGER_DB_FILE)
+    except Exception as e:
+        raise RuntimeError(f"담당자 DB 로드 오류: {e}")

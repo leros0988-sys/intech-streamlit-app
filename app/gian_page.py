@@ -9,22 +9,6 @@ from reportlab.lib.pagesizes import A4
 from app.utils.loader import load_manager_db  # 담당자 DB 로드
 
 
-def load_manager_db() -> pd.DataFrame:
-    """
-    기관 담당자 DB 로드 함수
-    (기존 partner_db 와는 별도의 manager_db 파일을 사용한다고 가정)
-    """
-    MANAGER_DB_FILE = BASE / "utils" / "manager_db.xlsx"
-
-    if not MANAGER_DB_FILE.exists():
-        raise RuntimeError("manager_db.xlsx 파일이 존재하지 않습니다.")
-
-    try:
-        return pd.read_excel(MANAGER_DB_FILE)
-    except Exception as e:
-        raise RuntimeError(f"담당자 DB 로드 오류: {e}")
-
-
 def _summarize_settle(df: pd.DataFrame) -> pd.DataFrame:
     """기관 + SETTLE_ID + 채널별 건수 요약"""
     df = _normalize_org(df)
