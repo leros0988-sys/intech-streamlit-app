@@ -1,9 +1,6 @@
-from datetime import datetime
-from pathlib import Path
-
-LOG_FILE = Path(__file__).resolve().parent / "system.log"
-
-
-def write_log(user, action):
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"[{datetime.now()}] {user}: {action}\n")
+def load_login_logs(path="login_logs.txt"):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.readlines()
+    except:
+        return []
