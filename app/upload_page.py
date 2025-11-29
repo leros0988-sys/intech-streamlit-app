@@ -1,39 +1,38 @@
 import streamlit as st
 import pandas as pd
+from app.utils.file_reader import read_any_file
 
 
 def upload_page():
-    st.markdown("## 📂 정산 업로드 센터")
+    st.markdown("## 📤 정산 업로드 및 전체 통계자료")
 
     uploaded_files = st.file_uploader(
-        "📌 여러 개의 정산 엑셀 파일을 올려주세요.",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        key="upload_center"
+        "📂 여러 개의 엑셀 파일을 업로드하세요",
+        type=["xlsx", "xls", "csv"],
+        accept_multiple_files=True
     )
 
-    if not uploaded_files:
-        st.info("정산 파일을 업로드해주세요.")
-        return
+    if uploaded_files:
+        all_dfs = []
+        error_files = []
 
-    dfs = []
-    for f in uploaded_files:
-        try:
-            df = pd.read_excel(f)
-            df["__source_file"] = f.name
-            dfs.append(df)
-        except Exception as e:
-            st.error(f"{f.name} 읽는 중 오류: {e}")
-            return
+        for file in uploaded_files:
+            try:
+                df = read_any_file(file)
+                df["__source_file__"] = file.name
+                all_dfs.append(df)
+            except Exception as e:
+                error_files.append(f"{file.name} 읽는 중 오류: {e}")
 
-    combined = pd.concat(dfs, ignore_index=True)
-    st.session_state.uploaded_settlements = [
-        {"name": f.name, "df": pd.read_excel(f)} for f in uploaded_files
-    ]
-    st.session_state.raw_combined_df = combined
+        if error_files:
+            st.error("⚠ 오류가 발생한 파일들:\n" + "\n".join(error_files))
 
-    st.success(f"{len(uploaded_files)}개 파일 업로드 및 병합 완료!")
+        if all_dfs:
+            combined = pd.concat(all_dfs, ignore_index=True)
+            st.session_state.raw_combined_df = combined
 
-    with st.expander("📄 병합 데이터 미리보기"):
-        st.dataframe(combined.head(200), use_container_width=True)
+            st.success(f"총 {len(all_dfs)}개 파일 병합 완료!")
+            st.dataframe(combined.head(200), use_container_width=True)
 
+        else:
+            st.warning("업로드된 자료에서 읽을 수 있는 파일이 없습니다.")
