@@ -4,13 +4,14 @@ from typing import Dict
 import pandas as pd
 from app.utils.file_reader import read_any_file
 
+
 def validate_uploaded_files(files) -> Dict[str, Dict[str, pd.DataFrame]]:
     """
-    파일명 → 시트명 → DF 구조로 반환.
-    (upload_page가 요구하는 정확한 형태)
+    파일 여러 개 업로드 → 시트 → df 구조를 통일
+    return = { "파일명": { "Sheet1": df } }
     """
 
-    validated: Dict[str, Dict[str, pd.DataFrame]] = {}
+    result = {}
 
     for f in files:
         name = f.name
@@ -18,14 +19,13 @@ def validate_uploaded_files(files) -> Dict[str, Dict[str, pd.DataFrame]]:
         try:
             df = read_any_file(f)
 
-            if df is None or not isinstance(df, pd.DataFrame) or df.empty:
-                raise ValueError("유효한 데이터가 아님")
-
-            # ✔ 하나의 파일을 "단일 시트" 형태로 묶어서 반환
-            validated[name] = { "Sheet1": df }
+            if isinstance(df, pd.DataFrame) and not df.empty:
+                result[name] = {"Sheet1": df}
+            else:
+                print(f"[validator] {name} 무효 (empty or wrong type)")
 
         except Exception as e:
-            print(f"[validator] '{name}' 읽기 실패: {e}")
+            print(f"[validator] {name} 오류: {e}")
             continue
 
-    return validated
+    return result
