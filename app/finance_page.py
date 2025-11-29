@@ -1,27 +1,26 @@
-# app/utils/calculator.py
+import streamlit as st
+from app.utils.calculator import summarize_settle
 
-import pandas as pd
 
-def summarize_settle(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    정산 업로드된 모든 엑셀을 병합한 raw_df를 받아
-    기관명 / SETTLE ID / 발송건수 / 인증건수 / 금액 등을 요약해주는 함수
-    """
+def finance_page():
+    st.markdown("## 💰 정산 처리 페이지")
 
-    # 필수 컬럼 체크
-    required = ["기관명", "SETTLE_ID", "발송건수", "인증건수", "금액"]
-    for col in required:
-        if col not in df.columns:
-            df[col] = 0   # 없으면 0으로 생성 (에러 방지)
+    if "raw_combined_df" not in st.session_state:
+        st.warning("⚠ 먼저 '정산 업로드 센터'에서 파일을 업로드해주세요.")
+        return
 
-    # SETTLE ID 기준 집계
-    grouped = (
-        df.groupby(["기관명", "SETTLE_ID"], dropna=False)[
-            ["발송건수", "인증건수", "금액"]
-        ]
-        .sum()
-        .reset_index()
-    )
+    df = st.session_state.raw_combined_df
 
-    return grouped
+    st.markdown("### 📌 SETTLE ID 기준 요약 생성")
 
+    if st.button("정산 요약 만들기"):
+        try:
+            summary = summarize_settle(df)
+            st.session_state["settle_summary"] = summary
+            st.success("정산 요약 생성 완료!")
+        except Exception as e:
+            st.error(f"오류: {e}")
+
+    if "settle_summary" in st.session_state:
+        st.markdown("### 📄 정산 요약 자료")
+        st.dataframe(st.session_state.settle_summary, use_container_width=True)
