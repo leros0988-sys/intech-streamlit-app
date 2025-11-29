@@ -1,20 +1,17 @@
-# ==== Streamlit ====
 streamlit==1.33.0
-
-# ==== Data ====
 pandas==2.2.2
-numpy==1.26.4
-python-dateutil==2.9.0
+numpy
+python-dateutil
 
-# ==== Excel ====
+# Excel
 openpyxl==3.1.2
-XlsxWriter==3.2.0
+XlsxWriter==3.2.1
 
-# ==== Images ====
-Pillow==10.3.0
+# PDF (reportlab은 Cloud에서 최신 버전 자동 사용해야 충돌 없음)
+reportlab
 
-# ==== PDF ====
-reportlab==3.6.12
+# 이미지
+Pillow   # 버전 제거해야 정상 설치됨
 
-# ==== Utils ====
-requests==2.31.0
+# 기타
+requests
