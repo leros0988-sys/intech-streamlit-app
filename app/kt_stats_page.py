@@ -1,22 +1,19 @@
-# app/kt_stats_page.py
-
 import streamlit as st
-import pandas as pd
 from app.utils.stats_common import filter_by_channel, show_statistics
 
-
 def kt_stats_page():
-    st.markdown("## 🔵 KT 통계 페이지")
+    st.markdown("## 💙 KT 통계자료")
 
-    if "raw_combined_df" not in st.session_state:
-        st.warning("먼저 [정산 업로드 및 전체 통계자료]에서 파일을 업로드해주세요.")
+    df = st.session_state.get("raw_combined_df", None)
+
+    if df is None:
+        st.info("데이터가 없습니다. 먼저 업로드하세요.")
         return
 
-    df: pd.DataFrame = st.session_state.raw_combined_df
+    kt_df = filter_by_channel(df, ["KT", "kt"])
 
-    # KT 필터링
-    kt_df = filter_by_channel(df, ["KT", "케이티"])
+    if kt_df is None or kt_df.empty:
+        st.info("KT 자료가 없습니다.")
+        return
 
-    # 통계 표시
-    show_statistics(kt_df, "KT")
-
+    show_statistics(kt_df, "KT 통계자료")
