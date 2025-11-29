@@ -1,37 +1,46 @@
 import streamlit as st
 import pandas as pd
-from app.utils.file_reader import read_any_file
+
 
 def upload_page():
-    st.markdown("## 📂 정산 파일 업로드 센터")
+    st.markdown("## 📂 정산 업로드 센터")
 
     uploaded_files = st.file_uploader(
-        "카카오/KT/네이버 통계자료 엑셀/CSV 업로드",
+        "📌 여러 개의 정산 엑셀 파일을 올려주세요",
+        type=["xlsx"],
         accept_multiple_files=True,
-        type=["xlsx", "xls", "csv"]
+        key="upload_center"
     )
 
-    if uploaded_files:
-        merged = []
-        errors = []
+    if not uploaded_files:
+        st.info("정산 파일을 업로드해주세요.")
+        return
 
-        for f in uploaded_files:
-            df = read_any_file(f)
-            if df is None:
-                errors.append(f"❌ {f.name}: 읽기 실패 (엑셀 아님 또는 손상됨)")
-            else:
-                df["__source_file"] = f.name
-                merged.append(df)
+    dfs = []
+    meta = []
 
-        if errors:
-            st.error("\n".join(errors))
-
-        if len(merged) == 0:
-            st.warning("올바른 파일이 없어서 저장하지 않았습니다.")
+    for file in uploaded_files:
+        try:
+            df = pd.read_excel(file)
+            df["__source_file"] = file.name
+            dfs.append(df)
+        except Exception as e:
+            st.error(f"{file.name} 파일을 읽는 중 오류 발생: {e}")
             return
 
-        final_df = pd.concat(merged, ignore_index=True)
-        st.session_state["uploaded_settlements"] = final_df
+    if len(dfs) == 0:
+        st.error("업로드된 파일에서 데이터를 읽지 못했습니다.")
+        return
 
-        st.success(f"📥 업로드 성공! 총 {len(merged)}개 파일 처리")
-        st.dataframe(final_df.head(50), use_container_width=True)
+    combined = pd.concat(dfs, ignore_index=True)
+
+    # 세션에 저장
+    st.session_state.uploaded_settlements = [
+        {"name": f.name, "df": pd.read_excel(f)} for f in uploaded_files
+    ]
+    st.session_state["raw_combined_df"] = combined
+
+    st.success(f"총 {len(uploaded_files)}개 파일 업로드 및 병합 완료!")
+
+    with st.expander("📄 병합된 데이터 미리보기"):
+        st.dataframe(combined.head(200), use_container_width=True)
