@@ -1,14 +1,12 @@
+# app/finance_page.py
+
 import streamlit as st
 import pandas as pd
 import io
 
-from app.utils.loader import load_rate_table, load_partner_db
-from app.utils.validator import validate_uploaded_files
-from app.utils.calculator import calculate_settlement
-from app.utils.generator import generate_settlement_excel
 
-
-def df_to_excel_bytes(df: pd.DataFrame) -> bytes:
+def _df_to_excel_bytes(df: pd.DataFrame) -> bytes:
+    """DataFrame → 엑셀 바이너리로 변환"""
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
@@ -17,91 +15,108 @@ def df_to_excel_bytes(df: pd.DataFrame) -> bytes:
 
 
 def finance_page():
-    st.markdown("## 💰 정산 업로드 및 전체 통계자료")
+    st.markdown("## 💰 정산 업로드 센터")
+    st.write("카카오 / KT / 네이버 등 통계 엑셀을 여러 개 올려서 한 번에 병합하고, 선택적으로 다운로드할 수 있습니다.")
 
-    # DB 로드
-    try:
-        rate_db = load_rate_table()
-        partner_db = load_partner_db()
-    except Exception as e:
-        st.error(f"DB 로드 오류: {e}")
-        return
-
-    with st.expander("📂 기준 DB 확인"):
-        st.dataframe(rate_db.head(20))
-        st.dataframe(partner_db.head(20))
-
-    st.markdown("### 1) 통계자료 업로드")
+    # 1) 여러 개 엑셀 업로드
     uploaded_files = st.file_uploader(
-        "카카오/KT/네이버 통계 엑셀 여러 개 업로드 가능",
-        type=["xlsx"],
+        "통계 엑셀 파일들을 모두 선택해서 업로드하세요. (여러 개 선택 가능)",
+        type=["xlsx", "xls"],
         accept_multiple_files=True,
-        key="settle_upload_finance"
+        key="finance_upload_files",
     )
 
-    if uploaded_files:
+    if not uploaded_files:
+        st.info("먼저 통계 엑셀 파일들을 업로드해주세요.")
+        return
+
+    st.success(f"현재 업로드된 파일 개수: **{len(uploaded_files)}개**")
+    for f in uploaded_files:
+        st.write(f"· {f.name}")
+
+    # 2) 업로드된 엑셀 전부 읽어서 병합
+    dfs = []
+    for f in uploaded_files:
         try:
-            validated = validate_uploaded_files(uploaded_files)
+            df = pd.read_excel(f)
         except Exception as e:
-            st.error(f"파일 검증 오류: {e}")
+            st.error(f"{f.name} 읽기 실패: {e}")
             return
 
-        dfs = []
-        for fname, df in validated.items():
-            df["원본파일"] = fname
-            dfs.append(df)
+        if df.empty:
+            st.warning(f"{f.name} : 데이터가 없습니다 (비어 있는 엑셀)")
+            continue
 
-        merged = pd.concat(dfs, ignore_index=True)
+        # 컬럼 이름 양쪽 공백 제거
+        df.columns = df.columns.map(lambda x: str(x).strip())
+        # 원본 파일명 표시
+        df["__원본파일"] = f.name
+        dfs.append(df)
 
-        st.session_state["raw_settle_df"] = merged
-        st.success(f"총 {len(uploaded_files)}개 파일 업로드 성공")
+    if not dfs:
+        st.error("유효한 데이터가 있는 엑셀 파일이 없습니다.")
+        return
 
-        with st.expander("업로드 원본 미리보기"):
-            st.dataframe(merged.head(50))
+    combined = pd.concat(dfs, ignore_index=True)
+
+    # 다른 페이지에서 쓰고 싶으면 여기서 참조 가능
+    st.session_state["combined_settle_df"] = combined
 
     st.markdown("---")
+    st.markdown("### 🔍 병합된 원본 미리보기")
+    st.dataframe(combined.head(100), use_container_width=True)
 
-    if "raw_settle_df" in st.session_state:
-        if st.button("🔢 정산 계산 실행"):
-            try:
-                settled, issues = calculate_settlement(st.session_state["raw_settle_df"], rate_db)
-                st.session_state["settled_df"] = settled
-                st.session_state["issues_df"] = issues
-                st.success("정산 계산 완료!")
-            except Exception as e:
-                st.error(f"정산 오류: {e}")
+    # 3) '기관명' 컬럼이 있으면 기관별 선택 필터 제공
+    st.markdown("### 🎯 기관 선택 후 다운로드")
 
-    if "settled_df" in st.session_state:
-        settled_df = st.session_state["settled_df"]
-        st.markdown("### 3) 정산 결과 요약")
-
-        기관_list = sorted(settled_df["기관명"].unique())
-        선택기관 = st.multiselect("다운로드할 기관 선택", 기관_list)
-
-        결과 = settled_df if not 선택기관 else settled_df[settled_df["기관명"].isin(선택기관)]
-
-        st.download_button(
-            "📥 선택 기관 다운로드",
-            data=df_to_excel_bytes(결과),
-            file_name="정산_선택기관.xlsx"
+    if "기관명" in combined.columns:
+        org_list = (
+            combined["기관명"]
+            .dropna()
+            .astype(str)
+            .sort_values()
+            .unique()
+            .tolist()
         )
 
-        st.download_button(
-            "📥 전체 정산 다운로드",
-            data=df_to_excel_bytes(settled_df),
-            file_name="정산_전체.xlsx"
+        selected_orgs = st.multiselect(
+            "다운로드할 기관을 선택하세요. (선택 안 하면 전체 병합본 기준)",
+            org_list,
         )
 
-    st.markdown("### 4) 특이사항 로그")
-    if "issues_df" in st.session_state and not st.session_state["issues_df"].empty:
-        issues_df = st.session_state["issues_df"]
-        st.warning(f"⚠ 매칭 실패 {len(issues_df)}건")
-        st.dataframe(issues_df)
+        if selected_orgs:
+            filtered = combined[combined["기관명"].isin(selected_orgs)]
+        else:
+            filtered = combined.copy()
+    else:
+        st.info("⚠ 병합된 데이터에 '기관명' 컬럼이 없어 기관별 필터는 사용 불가합니다. 전체만 다운로드할 수 있습니다.")
+        filtered = combined.copy()
+        selected_orgs = []
 
+    st.markdown("### 📥 엑셀 다운로드")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # 선택한 기관만 다운로드 (기관 선택이 없으면 버튼 비활성화)
+        if selected_orgs:
+            bytes_selected = _df_to_excel_bytes(filtered)
+            st.download_button(
+                "📥 선택한 기관만 엑셀 다운로드",
+                data=bytes_selected,
+                file_name="정산_선택기관.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        else:
+            st.caption("※ 기관을 선택하면 '선택 기관만 다운로드' 버튼이 활성화됩니다.")
+
+    with col2:
+        bytes_all = _df_to_excel_bytes(combined)
         st.download_button(
-            "📥 특이사항 다운로드",
-            data=df_to_excel_bytes(issues_df),
-            file_name="정산_특이사항.xlsx"
+            "📥 전체 병합본 엑셀 다운로드",
+            data=bytes_all,
+            file_name="정산_전체병합.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
 
