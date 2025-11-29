@@ -6,15 +6,18 @@ pandas
 numpy
 python-dateutil
 
-# ===== 엑셀 처리 =====
+# ===== 엑셀 처리 (표준) =====
 openpyxl
 XlsxWriter
+
+# ===== 엑셀 처리 (깨진 파일 복구용 ultra-strong 엔진) =====
+calamine
 
 # ===== PDF 생성 =====
 reportlab
 
-# ===== 이미지 처리 (case: 엑셀 템플릿 내부 이미지 불러올 때 대비) =====
+# ===== 이미지 처리 =====
 Pillow
 
-# ===== 기타 유틸 =====
+# ===== 기타 =====
 requests

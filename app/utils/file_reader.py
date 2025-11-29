@@ -1,8 +1,15 @@
 import pandas as pd
 
 def read_any_file(file):
-    if file.name.endswith(".csv"):
-        return pd.read_csv(file)
+    import pandas as pd
+
+    try:
+        # 스타일 무시하고 읽기 (오류 방지)
+        return pd.read_excel(file, engine="openpyxl", dtype=str)
+    except Exception:
+        # 스타일 깨진 파일 강제 복구 모드
+        return pd.read_excel(file, engine="calamine")
+
 
     # 여러 시트 자동 병합
     excel = pd.ExcelFile(file)
