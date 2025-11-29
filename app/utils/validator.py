@@ -1,13 +1,16 @@
 import pandas as pd
 
-REQUIRED_COLUMNS = [
-    "일자", "기관명", "SETTLE_ID",
-    "발송건수", "열람건수", "인증건수"
-]
+
+def read_excel_anywhere(file):
+    try:
+        return pd.read_excel(file)
+    except Exception as e:
+        raise RuntimeError(f"{file.name} 파일을 읽을 수 없습니다: {e}")
 
 
-def validate_uploaded_df(df: pd.DataFrame):
-    missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
-    if missing:
-        return False, f"필수 컬럼 누락: {', '.join(missing)}"
-    return True, "OK"
+def validate_uploaded_files(uploaded_files):
+    validated = {}
+    for f in uploaded_files:
+        df = read_excel_anywhere(f)
+        validated[f.name] = df
+    return validated

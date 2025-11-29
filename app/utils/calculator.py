@@ -1,37 +1,35 @@
 import pandas as pd
 
-def summarize_by_settle_id(df: pd.DataFrame):
-    if df.empty:
-        return pd.DataFrame()
 
-    grouped = df.groupby(["SETTLE_ID", "기관명"], as_index=False).agg({
-        "발송건수": "sum",
-        "열람건수": "sum",
-        "인증건수": "sum"
-    })
+def combine_uploaded(uploaded_files):
+    dfs = []
+    for f in uploaded_files:
+        try:
+            df = pd.read_excel(f)
+            df["__source_file"] = f.name
+            dfs.append(df)
+        except Exception as e:
+            raise RuntimeError(f"{f.name} 읽기 오류: {e}")
 
-    grouped["정산금액"] = grouped["인증건수"] * 20
-    return grouped
+    if not dfs:
+        raise RuntimeError("업로드된 파일에서 데이터를 읽지 못했습니다.")
 
-
-# ------------------------------
-# 개별 통계 (옵션)
-# ------------------------------
-def summarize_kakao(df):
-    if df.empty:
-        return df
-    return df.groupby("일자", as_index=False).sum()
+    return pd.concat(dfs, ignore_index=True)
 
 
-def summarize_kt(df):
-    if df.empty:
-        return df
-    return df.groupby("일자", as_index=False).sum()
+def summarize_settle(df: pd.DataFrame):
+    # 통계자료에 반드시 있는 컬럼들 기반
+    required = ["SETTLE_ID", "기관명", "발송건수", "인증건수", "금액"]
+    missing = [c for c in required if c not in df.columns]
 
+    if missing:
+        raise RuntimeError(f"필수 컬럼 누락: {missing}")
 
-def summarize_naver(df):
-    if df.empty:
-        return df
-    return df.groupby("일자", as_index=False).sum()
-
-
+    return (
+        df.groupby(["SETTLE_ID", "기관명"], as_index=False)
+        .agg({
+            "발송건수": "sum",
+            "인증건수": "sum",
+            "금액": "sum"
+        })
+    )
