@@ -1,18 +1,21 @@
 import streamlit as st
 
-# 페이지 import
+# 페이지
 from app.login_page import login_page
 from app.main_page import main_page
 from app.upload_page import upload_page
 from app.finance_page import finance_page
+from app.gian_page import gian_page
+from app.logs_page import logs_page
+from app.partner_page import partner_page
 from app.kakao_stats_page import kakao_stats_page
 from app.kt_stats_page import kt_stats_page
 from app.naver_stats_page import naver_stats_page
-from app.partner_page import partner_page
-from app.gian_page import gian_page
-from app.logs_page import logs_page
 from app.admin_page import admin_page
 from app.settings_page import settings_page
+
+# 스타일 (이전 그대로)
+from app.style import apply_global_styles
 
 # -----------------------------
 # 세션 초기값
