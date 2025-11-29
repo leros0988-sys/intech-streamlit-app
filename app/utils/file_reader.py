@@ -5,37 +5,63 @@ from io import BytesIO
 import warnings
 
 def read_any_file(uploaded_file):
-    """엑셀/CSV 어떤 파일이 와도 DataFrame으로 반환하는 안정 버전"""
+    """
+    업로드된 파일을 반드시 다음 형태로 반환한다:
+    {
+        "시트명1": df1,
+        "시트명2": df2,
+        ...
+    }
+    실패하면 예외 발생
+    """
 
     file_bytes = uploaded_file.read()
     data = BytesIO(file_bytes)
 
-    # 1) openpyxl 시도
+    # ------------------------------------------------------
+    # 1) Excel — 다중 시트 로드 (openpyxl)
+    # ------------------------------------------------------
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            df = pd.read_excel(data, dtype=str, engine="openpyxl")
-        return {"Sheet1": df}  # 반드시 dict 반환
-    except Exception:
-        pass
+            xls = pd.ExcelFile(data, engine="openpyxl")
 
+        sheet_dict = {}
+        for sheet_name in xls.sheet_names:
+            try:
+                df = pd.read_excel(xls, sheet_name=sheet_name, dtype=str)
+                sheet_dict[sheet_name] = df
+            except:
+                continue
+
+        if sheet_dict:
+            return sheet_dict
+
+    except Exception as e:
+        print(f"[file_reader] Excel 다중 시트 실패: {e}")
+
+    # ------------------------------------------------------
+    # 2) CSV (utf-8)
+    # ------------------------------------------------------
     data.seek(0)
-
-    # 2) CSV utf-8
     try:
         df = pd.read_csv(data, dtype=str, encoding="utf-8-sig")
-        return {"Sheet1": df}
-    except Exception:
+        return {"CSV": df}
+    except:
         pass
 
+    # ------------------------------------------------------
+    # 3) CSV (cp949)
+    # ------------------------------------------------------
     data.seek(0)
-
-    # 3) CSV cp949
     try:
         df = pd.read_csv(data, dtype=str, encoding="cp949")
-        return {"Sheet1": df}
-    except Exception:
+        return {"CSV": df}
+    except:
         pass
 
-    raise RuntimeError("❌ 파일을 읽을 수 없습니다 (엑셀/CSV 구조 손상).")
+    # ------------------------------------------------------
+    # 최종 실패
+    # ------------------------------------------------------
+    raise RuntimeError("❌ 파일 파싱 실패: 엑셀/CSV 어떤 구조도 읽을 수 없습니다.")
 
