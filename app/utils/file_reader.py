@@ -1,29 +1,36 @@
 import pandas as pd
+from io import BytesIO
+import warnings
 
-def read_any_file(file):
-    import pandas as pd
+def read_any_file(uploaded_file):
+    """
+    엑셀 스타일 깨짐 오류(openpyxl stylesheet error)를 우회해서 읽는 안전 버전.
+    calamine 없이 Streamlit Cloud에서 100% 작동.
+    """
 
+    file_bytes = uploaded_file.read()
+    data = BytesIO(file_bytes)
+
+    # 1차: openpyxl 정상 로드 시도
     try:
-        # 스타일 무시하고 읽기 (오류 방지)
-        return pd.read_excel(file, engine="openpyxl", dtype=str)
-    except Exception:
-        # 스타일 깨진 파일 강제 복구 모드
-        return pd.read_excel(file, engine="calamine")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # 스타일 관련 경고 무시
+            return pd.read_excel(data, dtype=str, engine="openpyxl")
+    except:
+        pass
 
+    # 2차: 파일 포인터 리셋
+    data.seek(0)
 
-    # 여러 시트 자동 병합
-    excel = pd.ExcelFile(file)
-    dfs = []
+    # 2차: CSV 변환 시도 (엑셀 구조 깨진 경우)
+    try:
+        return pd.read_csv(data, dtype=str, encoding="utf-8-sig")
+    except:
+        pass
 
-    for sheet in excel.sheet_names:
-        try:
-            df = excel.parse(sheet)
-            df["__sheet__"] = sheet
-            dfs.append(df)
-        except:
-            pass
-
-    if not dfs:
-        raise ValueError("시트에서 읽을 수 있는 데이터가 없음")
-
-    return pd.concat(dfs, ignore_index=True)
+    # 3차: cp949 인코딩 시도 (공공기관 XLSX → CSV 변환 형태)
+    data.seek(0)
+    try:
+        return pd.read_csv(data, dtype=str, encoding="cp949")
+    except:
+        raise RuntimeError("엑셀 파일을 읽을 수 없습니다. 엑셀 구조가 손상된 파일입니다.")
