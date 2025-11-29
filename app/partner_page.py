@@ -46,9 +46,11 @@ def partner_page():
     rate_cert = partner_info["cert_rate"]
 
     st.info(
-        f"🔹 **{selected_partner} 단가 정보**  
-        - 발송 단가: {rate_send:,}원  
-        - 인증 단가: {rate_cert:,}원"
+        f"""
+🔹 **{selected_partner} 단가 정보**
+- 발송 단가: {rate_send:,}원
+- 인증 단가: {rate_cert:,}원
+"""
     )
 
     # -------------------------------------
