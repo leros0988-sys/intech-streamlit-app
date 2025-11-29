@@ -1,19 +1,60 @@
 import streamlit as st
 import pandas as pd
-from app.utils.loader import load_settings
 
 def naver_stats_page():
-    st.markdown("## 📨 네이버 통계자료")
+    st.markdown("## 🟢 네이버 통계자료")
 
-    df = st.session_state.get("raw_df")
-    if df is None:
-        st.warning("먼저 [정산 업로드 및 전체 통계자료]에서 엑셀을 업로드해주세요.")
+    if "raw_combined_df" not in st.session_state:
+        st.info("먼저 [정산 업로드 및 전체 통계자료]에서 엑셀을 업로드해주세요.")
         return
 
-    naver_df = filter_by_channel(df, "네이버")
+    df = st.session_state.raw_combined_df
+
+    # 1) 네이버 파일 필터링
+    naver_df = df[df["__source_file__"].str.contains("네이버|naver|NAVER", case=False, na=False)]
+
     if naver_df.empty:
-        st.info("네이버 건이 없습니다.")
+        st.warning("네이버 관련 데이터가 없습니다.")
         return
 
-    st.markdown("### 📊 네이버 원본 일부")
-    st.dataframe(naver_df.head(100), use_container_width=True)
+    st.success("네이버 자료 불러오기 완료!")
+
+    # 자동 탐지
+    send_col = next((c for c in naver_df.columns if "발송" in c or "수신" in c), None)
+    open_col = next((c for c in naver_df.columns if "열람" in c), None)
+
+    if send_col is None:
+        st.error("네이버 데이터에서 발송 컬럼을 찾을 수 없습니다.")
+        return
+
+    if open_col is None:
+        naver_df["열람건수"] = 0
+        open_col = "열람건수"
+
+    # 계산
+    total_send = naver_df[send_col].sum()
+    total_open = naver_df[open_col].sum()
+    rate_open = (total_open / total_send * 100) if total_send > 0 else 0
+
+    st.markdown("### 📌 전체 요약")
+    st.write({
+        "총 발송건수": int(total_send),
+        "총 열람건수": int(total_open),
+        "열람률(%)": round(rate_open, 2),
+    })
+
+    # 기관별 요약
+    if "기관명" in naver_df.columns:
+        agency_summary = naver_df.groupby("기관명")[[send_col, open_col]].sum()
+        agency_summary["열람률"] = (agency_summary[open_col] / agency_summary[send_col] * 100).round(2)
+
+        st.markdown("### 🏢 기관별 요약")
+        st.dataframe(agency_summary, use_container_width=True)
+
+    # 일자별 요약
+    if "일자" in naver_df.columns:
+        daily_summary = naver_df.groupby("일자")[[send_col, open_col]].sum()
+        daily_summary["열람률"] = (daily_summary[open_col] / daily_summary[send_col] * 100).round(2)
+
+        st.markdown("### 📅 일자별 요약")
+        st.dataframe(daily_summary, use_container_width=True)
