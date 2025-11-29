@@ -1,5 +1,20 @@
+# ===== Streamlit 핵심 =====
 streamlit==1.33.0
+
+# ===== 데이터 처리 =====
 pandas
+numpy
+python-dateutil
+
+# ===== 엑셀 처리 =====
 openpyxl
 XlsxWriter
-python-dateutil
+
+# ===== PDF 생성 =====
+reportlab
+
+# ===== 이미지 처리 (case: 엑셀 템플릿 내부 이미지 불러올 때 대비) =====
+Pillow
+
+# ===== 기타 유틸 =====
+requests
