@@ -1,32 +1,41 @@
 # app/utils/validator.py
 
+from typing import Dict
 import pandas as pd
-from .file_reader import read_any_file
+from app.utils.file_reader import read_any_file
 
 
-def validate_uploaded_files(uploaded_files):
+def validate_uploaded_files(files) -> Dict[str, pd.DataFrame]:
     """
-    여러 개 업로드된 파일을 읽어서 {파일명: DataFrame} 딕셔너리로 반환.
+    업로드된 파일들을 안전하게 읽어 DataFrame만 반환하는 검증기.
+    - 파일 하나라도 실패하면 해당 파일은 제외
+    - None, 빈 DF 절대 허용하지 않음
+    - 항상 dict[str, DataFrame] 형태로만 반환
     """
-    validated: dict[str, pd.DataFrame] = {}
 
-    for f in uploaded_files:
-        df = read_any_file(f)
-        if df is None or df.empty:
+    validated = {}
+
+    for f in files:
+        name = f.name
+
+        try:
+            df = read_any_file(f)
+
+            # 완전 무결성 검증
+            if df is None:
+                raise ValueError("None 반환됨")
+
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError("DataFrame이 아님")
+
+            if df.empty:
+                raise ValueError("빈 파일")
+
+            validated[name] = df
+
+        except Exception as e:
+            print(f"[validator] '{name}' 읽기 실패: {e}")
+            # 실패한 파일은 절대 validated에 넣지 않는다.
             continue
-        validated[f.name] = df
-
-    if not validated:
-        raise RuntimeError("업로드된 파일에서 유효한 데이터를 찾지 못했습니다.")
 
     return validated
-
-
-def validate_uploaded_df(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    예전에 쓰던 인터페이스 호환용(단일 DF 검증).
-    지금은 특별한 검증은 하지 않고 그대로 반환.
-    """
-    if df is None or df.empty:
-        raise RuntimeError("업로드된 데이터가 비어 있습니다.")
-    return df
