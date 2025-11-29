@@ -3,27 +3,24 @@ from app.utils.logger import load_login_logs
 
 
 def logs_page():
-    st.markdown("## 📜 로그인 로그 조회")
 
-    df = load_login_logs()
-    if df is None or df.empty:
+    st.markdown("## 📝 로그인 로그 조회")
+
+    logs = load_login_logs()   # 리스트 반환됨
+
+    if not logs or len(logs) == 0:
         st.info("아직 기록된 로그인 로그가 없습니다.")
         return
 
+    # 리스트 → DataFrame 변환 (표시용)
+    df = [{"로그기록": line} for line in logs]
+
     st.dataframe(df, use_container_width=True)
 
-    st.markdown("### 🔎 필터")
-    col1, col2 = st.columns(2)
-    with col1:
-        user = st.text_input("사용자 필터 (부분 일치)")
-    with col2:
-        status = st.multiselect("상태", options=df["status"].unique().tolist())
+    st.markdown("### 🔍 필터")
+    keyword = st.text_input("검색어 입력", "")
 
-    filtered = df.copy()
-    if user:
-        filtered = filtered[filtered["username"].str.contains(user, na=False)]
-    if status:
-        filtered = filtered[filtered["status"].isin(status)]
-
-    st.markdown("### 결과")
-    st.dataframe(filtered, use_container_width=True)
+    if keyword:
+        filtered = [line for line in logs if keyword in line]
+        filtered_df = [{"로그기록": line} for line in filtered]
+        st.dataframe(filtered_df, use_container_width=True)
