@@ -1,29 +1,31 @@
-import pandas as pd
-from datetime import datetime
+# app/utils/logger.py
+
 import os
+from datetime import datetime
 
-LOG_PATH = "app/utils/login_logs.csv"
+import pandas as pd
+
+LOG_FILE = "app/utils/login_logs.csv"
 
 
-def write_log(user, msg):
+def write_log(user: str, message: str) -> None:
+    """로그인/관리 이벤트 간단 기록"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    new = pd.DataFrame([[now, user, message]],
+                       columns=["timestamp", "user", "message"])
 
-    new_row = pd.DataFrame(
-        [[now, user, msg]],
-        columns=["timestamp", "user", "message"]
-    )
-
-    if os.path.exists(LOG_PATH):
-        old = pd.read_csv(LOG_PATH)
-        df = pd.concat([old, new_row], ignore_index=True)
+    if os.path.exists(LOG_FILE):
+        old = pd.read_csv(LOG_FILE)
+        df = pd.concat([old, new], ignore_index=True)
     else:
-        df = new_row
+        df = new
 
-    df.to_csv(LOG_PATH, index=False, encoding="utf-8-sig")
+    df.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
 
 
-def load_login_logs():
-    if not os.path.exists(LOG_PATH):
+def load_login_logs() -> pd.DataFrame:
+    """로그 CSV 로드 (없으면 빈 DF)"""
+    if not os.path.exists(LOG_FILE):
         return pd.DataFrame(columns=["timestamp", "user", "message"])
+    return pd.read_csv(LOG_FILE)
 
-    return pd.read_csv(LOG_PATH)
