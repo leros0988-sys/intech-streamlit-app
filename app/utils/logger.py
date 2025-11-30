@@ -1,15 +1,14 @@
-# app/utils/logger.py
-
 import os
 from datetime import datetime
 
-LOG_FILE = "app/logs/system.log"
-os.makedirs("app/logs", exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일 기준
+LOG_DIR = os.path.join(BASE_DIR, "..", "logs")
+LOG_FILE = os.path.join(LOG_DIR, "system.log")
+
+os.makedirs(LOG_DIR, exist_ok=True)
 
 def write_log(user: str, action: str):
-    """사용자 행동을 로그 텍스트 파일에 기록"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     line = f"[{timestamp}] ({user}) {action}\n"
 
     with open(LOG_FILE, "a", encoding="utf-8") as f:
@@ -17,7 +16,6 @@ def write_log(user: str, action: str):
 
 
 def read_logs() -> list:
-    """저장된 로그 전체를 리스트로 반환"""
     if not os.path.exists(LOG_FILE):
         return []
 
