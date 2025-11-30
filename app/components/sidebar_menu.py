@@ -13,7 +13,7 @@ def draw_sidebar(is_admin: bool = False) -> str:
     with st.sidebar:
         st.markdown(
             """
-            <div style="font-size:22px; font-weight:800; margin-bottom:20px;">
+            <div style="font-size:22px; font-weight:800; margin-bottom:20px; background-color: #ffffff;">
                 📁 메뉴
             </div>
             """,
