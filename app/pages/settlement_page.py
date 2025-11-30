@@ -247,7 +247,7 @@ def settlement_page():
 
     processor = SettlementProcessor(rates_df=rates_df, drafts_df=drafts_df, kakao_df=kakao_df)
     summary = SettlementSummary(kakao_df=kakao_df, rates_df=rates_df, drafts_df=drafts_df)
-    missing_det = MissingDetector(kakao_df=kakao_df, master_settle_df=rates_df)
+    missing_det = MissingFinder(kakao_df=kakao_df, master_settle_df=rates_df)
 
     # 3-1) 요약
     summary_dict = summary.build_summary_dict()
