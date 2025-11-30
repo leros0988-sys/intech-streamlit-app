@@ -3,6 +3,51 @@ from app.style import apply_global_styles
 from app.utils.loader import load_settings
 
 
+# -----------------------------------------------------
+# 🔥 유튜브 링크를 안전하게 embed로 변환하는 함수
+#   (오류 153 방지: st.video() 대신 iframe 직접 삽입)
+# -----------------------------------------------------
+def embed_youtube(url: str):
+    if not url:
+        return
+
+    # 1) youtu.be → watch?v=
+    if "youtu.be/" in url:
+        video_id = url.split("youtu.be/")[1].split("?")[0]
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
+    # 2) shorts → watch?v=
+    if "youtube.com/shorts/" in url:
+        video_id = url.split("shorts/")[1].split("?")[0]
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
+    # 3) m.youtube.com → www.youtube.com
+    if "m.youtube.com" in url:
+        url = url.replace("m.youtube.com", "www.youtube.com")
+
+    # 4) watch?v= → embed 변환
+    embed_url = url
+    if "watch?v=" in url:
+        video_id = url.split("watch?v=")[1].split("&")[0]
+        embed_url = f"https://www.youtube.com/embed/{video_id}"
+
+    # 5) iframe 삽입
+    st.components.v1.html(
+        f"""
+        <iframe width="100%" height="520"
+        src="{embed_url}"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+        """,
+        height=540
+    )
+
+
+
+# -----------------------------------------------------
+# 📌 메인 페이지
+# -----------------------------------------------------
 def main_page():
     apply_global_styles()
     settings = load_settings()
@@ -33,7 +78,6 @@ def main_page():
             📱 아이앤텍 전자고지 대금청구서 대시보드 📱
         </div>
     """, unsafe_allow_html=True)
-
 
     df = st.session_state.get("raw_df")
     total_statements = 0
@@ -75,9 +119,8 @@ def main_page():
     )
 
     # ------------------------------------
-    # 공지사항 (settings에 저장된 문구)
+    # 공지사항
     # ------------------------------------
-    
     st.markdown(
         f"""
         <div style="
@@ -98,7 +141,7 @@ def main_page():
     )
 
     # ------------------------------------
-    # 환영 문구 + 이름 입력
+    # 이름 입력
     # ------------------------------------
     st.markdown("""
         <div style="text-align:center; margin-bottom:20px;">
@@ -130,7 +173,6 @@ def main_page():
                 날씨가 많이 추워졌네요. 따숩게 입고 다니세요. ❄️
             </div>
         """, unsafe_allow_html=True)
-
 
     # ------------------------------------
     # 방명록
@@ -178,28 +220,8 @@ def main_page():
                 st.rerun()
 
     # ------------------------------------
-    # 유튜브 자동 변환 + 재생
+    # 유튜브 영상 재생 (오류 153 완전 방지)
     # ------------------------------------
-    url = settings.get("youtube_url", "")
+    st.markdown("## 📺 쉬어가기")
+    embed_youtube(settings.get("youtube_url", ""))
 
-    if url:
-        # 1) youtu.be → watch?v=
-        if url.startswith("https://youtu.be/"):
-            video_id = url.replace("https://youtu.be/", "")
-            # ?si= 등 파라미터 제거
-            video_id = video_id.split("?")[0]
-            url = f"https://www.youtube.com/watch?v={video_id}"
-
-        # 2) shorts → watch?v=
-        elif "youtube.com/shorts/" in url:
-            video_id = url.split("shorts/")[1].split("?")[0]
-            url = f"https://www.youtube.com/watch?v={video_id}"
-
-        # 3) 모바일 URL → desktop URL
-        elif url.startswith("https://m.youtube.com/"):
-            url = url.replace("https://m.youtube.com/", "https://www.youtube.com/")
-
-        try:
-            st.video(url)
-        except:
-            st.error("유튜브 영상을 불러오지 못했습니다. URL을 다시 확인해주세요.")
