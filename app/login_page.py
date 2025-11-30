@@ -1,35 +1,28 @@
 import streamlit as st
-from app.utils.loader import load_settings
-from app.utils.logger import write_log
-
-
-# ------------------------
-# 일반 사용자 1명
-# ------------------------
-USER_CREDENTIALS = {
-    "intech2014": "vlftkwmrtodWW^^"
-}
-
-# ------------------------
-# 관리자 1명
-# ------------------------
-ADMIN_CREDENTIALS = {
-    "intech2001": "Qtncjwkrwndlqcjrowls40#"
-}
-
+import streamlit as st
 
 def login_page():
-    settings = load_settings()
-    fail_limit = int(settings.get("login_fail_limit", 5))
 
-    # 실패 횟수 초기화
+    ADMIN_ID = st.secrets["auth"]["ADMIN_ID"]
+    ADMIN_PW = st.secrets["auth"]["ADMIN_PW"]
+    USER_ID = st.secrets["auth"]["USER_ID"]
+    USER_PW = st.secrets["auth"]["USER_PW"]
+
+    fail_limit = 5
+
     if "login_fail_count" not in st.session_state:
         st.session_state.login_fail_count = 0
     if "locked" not in st.session_state:
         st.session_state.locked = False
 
-    st.markdown('<div class="title-text">e mobile 정산 대시보드</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle-text">로그인을 해주세요。</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="title-text">📱 e mobile 정산 대시보드</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<div class="subtitle-text">로그인을 해주세요。</div>',
+        unsafe_allow_html=True
+    )
 
     if st.session_state.locked:
         st.error(f"로그인 실패 {fail_limit}회 초과로 계정이 잠겼습니다.")
@@ -40,33 +33,18 @@ def login_page():
 
     if st.button("로그인"):
 
-        # --------------------------
-        # 관리자 로그인
-        # --------------------------
-        if user in ADMIN_CREDENTIALS and ADMIN_CREDENTIALS[user] == password:
+        if user == ADMIN_ID and password == ADMIN_PW:
             st.session_state.logged_in = True
-            st.session_state.user = user
             st.session_state.is_admin = True
             st.session_state.page = "메인 대시보드"
-            st.session_state.login_fail_count = 0
-            st.session_state.locked = False
             st.rerun()
 
-        # --------------------------
-        # 일반 사용자 로그인
-        # --------------------------
-        elif user in USER_CREDENTIALS and USER_CREDENTIALS[user] == password:
+        elif user == USER_ID and password == USER_PW:
             st.session_state.logged_in = True
-            st.session_state.user = user
             st.session_state.is_admin = False
             st.session_state.page = "메인 대시보드"
-            st.session_state.login_fail_count = 0
-            st.session_state.locked = False
             st.rerun()
 
-        # --------------------------
-        # 실패 시
-        # --------------------------
         else:
             st.session_state.login_fail_count += 1
             remain = fail_limit - st.session_state.login_fail_count
