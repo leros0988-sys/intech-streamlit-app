@@ -4,5 +4,7 @@
     "main_image": "app/images/imagesusagi_kuma.png",
     "youtube_url": "https://www.youtube.com/embed/Xf5WPFS9gik?si=nxyFwQPCYT2-tu37",
     "rate_table_path": "app/utils/rate_table.xlsx",
-    "partner_db_path": "app/utils/기관담당자DB.xlsx"
+    "partner_db_path": "app/utils/기관담당자DB.xlsx",
+    "auto_logout_minutes": 30,
+    "main_image_path": "app/images/updated_main_img.png"
 }

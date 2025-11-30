@@ -178,26 +178,39 @@ def main_page():
                 st.session_state.guestbook.pop(true_idx)
                 st.rerun()
 
-    # ------------------------------------------------------
-    # 🔥 유튜브 영상 (153 오류 없는 완전 안전 방식)
-    # ------------------------------------------------------
+# ------------------------------------------------------
+# 🔥 유튜브 영상 (153 오류 없는 완전 안전 방식)
+# ------------------------------------------------------
 
-    st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
+def clean_youtube_url(url: str) -> str:
+    if "?si=" in url:
+        url = url.split("?si=")[0]
+    if "watch?v=" in url:
+        video_id = url.split("watch?v=")[-1].split("&")[0]
+        url = f"https://www.youtube.com/embed/{video_id}"
+    if "youtu.be/" in url:
+        video_id = url.split("youtu.be/")[-1].split("?")[0]
+        url = f"https://www.youtube.com/embed/{video_id}"
+    return url
 
-    youtube_url = "https://www.youtube.com/embed/Xf5WPFS9gik?si=nxyFwQPCYT2-tu37"  # ← 여기에 네 영상 ID만 교체하면 됨
 
-    components.html(
-        f"""
-        <div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:40px;">
-            <iframe
-                width="750"
-                height="422"
-                src="{youtube_url}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-            </iframe>
-        </div>
-        """,
-        height=500,
-    )
+st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
+
+raw_url = "https://www.youtube.com/embed/Xf5WPFS9gik?si=nxyFwQPCYT2-tu37"
+youtube_url = clean_youtube_url(raw_url)
+
+components.html(
+    f"""
+    <div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:40px;">
+        <iframe
+            width="750"
+            height="422"
+            src="{youtube_url}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+        </iframe>
+    </div>
+    """,
+    height=500,
+)
