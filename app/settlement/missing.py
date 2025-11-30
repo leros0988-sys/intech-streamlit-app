@@ -1,102 +1,65 @@
 import pandas as pd
+from typing import List
 
 
-# -------------------------------------------------------
-# 1) 업로드된 "정산용 대금청구서" 파일에서 기관 목록 추출
-# -------------------------------------------------------
-
-def extract_settle_ids_from_multi(df: pd.DataFrame):
+class MissingDetector:
     """
-    대금청구서(다수기관) 파일에서 기관명 / Settle ID 목록 추출
-    """
-    cols = df.columns
-
-    org_col = None
-    sid_col = None
-
-    # 기관명 찾기
-    for c in ["기관명", "기관", "organization"]:
-        if c in cols:
-            org_col = c
-            break
-
-    # Settle ID 찾기
-    for c in ["Settle ID", "SETTLE_ID", "settle_id"]:
-        if c in cols:
-            sid_col = c
-            break
-
-    if org_col is None or sid_col is None:
-        raise RuntimeError("대금청구서 파일에서 기관명 또는 Settle ID가 없습니다.")
-
-    base_df = df[[org_col, sid_col]].copy()
-    base_df.columns = ["기관명", "SettleID"]
-
-    base_df["기관명"] = base_df["기관명"].astype(str).str.strip()
-    base_df["SettleID"] = base_df["SettleID"].astype(str).str.strip()
-
-    base_df = base_df[base_df["기관명"] != ""]
-    base_df = base_df[base_df["SettleID"] != ""]
-
-    return base_df
-
-
-# -------------------------------------------------------
-# 2) 카카오 통계 파일에서 기관명 / Settle ID 가져오기
-# -------------------------------------------------------
-
-def extract_settle_ids_from_kakao(df: pd.DataFrame):
-    """
-    카카오 통계 파일에서 기관명 / Settle ID 목록 생성
+    카카오 월별통계(kakao_df)와
+    2025 발송료/기안자료 master_df(= rates_df or drafts_df)
+    사이에서 '카카오 settle id' 누락 여부를 비교하여
+    정산 대상에서 빠진 기관을 자동 추출하는 클래스.
     """
 
-    cols = df.columns
-    org_col = None
-    sid_col = None
+    def __init__(
+        self,
+        kakao_df: pd.DataFrame,
+        master_settle_df: pd.DataFrame,
+        kakao_key: str = "Settle ID",
+        master_key: str = "카카오 settle id",
+    ):
+        """
+        kakao_df: 카카오 월별 정산 엑셀
+        master_settle_df: 2025 발송료 또는 기안자료 (둘 중 카카오 settle id가 있는 시트)
+        """
+        self.kakao_df = kakao_df.copy()
+        self.master_df = master_settle_df.copy()
+        self.kakao_key = kakao_key
+        self.master_key = master_key
 
-    for c in ["기관명", "사업자명", "기관"]:
-        if c in cols:
-            org_col = c
-            break
+    @staticmethod
+    def _clean(value):
+        """공백, NaN, 타입 정리."""
+        if pd.isna(value):
+            return ""
+        return str(value).strip()
 
-    for c in ["SETTLE_ID", "Settle ID", "settle_id"]:
-        if c in cols:
-            sid_col = c
-            break
+    def extract_unique_ids(self, df: pd.DataFrame, col: str) -> List[str]:
+        """컬럼에서 고유한 ID 목록 추출"""
+        return sorted(
+            list(
+                {
+                    self._clean(x)
+                    for x in df.get(col, [])
+                    if self._clean(x) != ""
+                }
+            )
+        )
 
-    if org_col is None:
-        raise RuntimeError("카카오 통계 파일에서 기관명을 찾을 수 없습니다.")
+    def find_missing(self) -> List[str]:
+        """
+        카카오 통계에는 있는데,
+        마스터(발송료/기안자료)에는 없는 settle id 추출.
+        """
+        kakao_ids = self.extract_unique_ids(self.kakao_df, self.kakao_key)
+        master_ids = self.extract_unique_ids(self.master_df, self.master_key)
 
-    # Settle ID 없는 경우도 있으므로 예외 처리
-    if sid_col is None:
-        out = df[[org_col]].copy()
-        out.columns = ["기관명"]
-        out["SettleID"] = ""
-        return out
+        missing = sorted(list(set(kakao_ids) - set(master_ids)))
+        return missing
 
-    out = df[[org_col, sid_col]].copy()
-    out.columns = ["기관명", "SettleID"]
-
-    out["기관명"] = out["기관명"].astype(str).strip()
-    out["SettleID"] = out["SettleID"].astype(str).strip()
-
-    return out
-
-
-# -------------------------------------------------------
-# 3) 누락 기관 계산
-# -------------------------------------------------------
-
-def find_missing_settle_ids(base_df, kakao_df):
-    """
-    대금청구서 기반 기관 목록 vs 카카오 통계 기관 목록 비교
-    """
-
-    base_names = set(base_df["기관명"])
-    kakao_names = set(kakao_df["기관명"])
-
-    missing = base_names - kakao_names  # 누락된 기관
-
-    miss_df = base_df[base_df["기관명"].isin(missing)].copy()
-
-    return miss_df
+    def to_dataframe(self) -> pd.DataFrame:
+        """
+        누락기관을 DataFrame 형태로 반환
+        """
+        missing = self.find_missing()
+        df = pd.DataFrame({"누락된 Settle ID": missing})
+        return df
