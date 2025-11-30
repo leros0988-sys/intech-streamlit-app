@@ -49,31 +49,3 @@ def save_settings(data: dict) -> None:
         encoding="utf-8"
     )
 
-
-# ----------------------------------------
-# 🔵 기관 담당자 DB 로드
-# ----------------------------------------
-def load_partner_db() -> pd.DataFrame:
-    """
-    partner_db.xlsx 로드.
-    파일 없으면 빈 데이터프레임 반환.
-    """
-    if not PARTNER_DB_FILE.exists():
-        return pd.DataFrame(columns=["기관명", "담당자", "연락처"])
-
-    try:
-        return pd.read_excel(PARTNER_DB_FILE)
-    except Exception as e:
-        raise RuntimeError(f"기관 담당자 DB 로드 오류: {e}")
-
-def load_manager_db() -> pd.DataFrame:
-    """기관 담당자 DB 로드"""
-    MANAGER_DB_FILE = BASE / "utils" / "manager_db.xlsx"
-
-    if not MANAGER_DB_FILE.exists():
-        raise RuntimeError("manager_db.xlsx 파일이 존재하지 않습니다.")
-
-    try:
-        return pd.read_excel(MANAGER_DB_FILE)
-    except Exception as e:
-        raise RuntimeError(f"담당자 DB 로드 오류: {e}")

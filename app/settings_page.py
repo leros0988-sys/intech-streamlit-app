@@ -9,7 +9,9 @@ def settings_page():
     # -------------------------------
     # 안전한 settings 로드
     # -------------------------------
-    settings = load_settings() or {}   # ❗ NoneType 방지 핵심
+    settings = load_settings()
+    if settings is None:
+        settings = {}   # ← None일 때만 초기화
 
     # -------------------------------
     # ① 메인 이미지 변경
@@ -22,7 +24,7 @@ def settings_page():
     img_file = st.file_uploader("새 메인 이미지 업로드 (png/jpg)", type=["png", "jpg", "jpeg"])
 
     if img_file is not None:
-        os.makedirs("app/images", exist_ok=True)   # 폴더 자동 생성
+        os.makedirs("app/images", exist_ok=True)
 
         save_path = os.path.join("app", "images", "updated_main_img.png")
 
@@ -31,10 +33,9 @@ def settings_page():
 
         settings["main_image_path"] = save_path
         save_settings(settings)
+        st.success("메인 이미지가 변경되었습니다!")
 
-        st.success("메인 이미지가 변경되었습니다! 메인 대시보드에서 확인해보세요.")
-
-    # 이미지 즉시 표시
+    # 즉시 표시
     if settings.get("main_image_path") and os.path.exists(settings["main_image_path"]):
         st.image(settings["main_image_path"], width=260)
 
@@ -51,7 +52,7 @@ def settings_page():
     if st.button("운영 안내 문구 저장"):
         settings["dashboard_text"] = new_text
         save_settings(settings)
-        st.success("운영 안내 문구가 저장되었습니다.")
+        st.success("운영 안내 문구 저장됨!")
 
     st.markdown("---")
 
@@ -65,7 +66,7 @@ def settings_page():
     if st.button("유튜브 링크 저장"):
         settings["youtube_url"] = new_url
         save_settings(settings)
-        st.success("유튜브 링크가 저장되었습니다.")
+        st.success("유튜브 링크 저장됨!")
 
     st.markdown("---")
 
@@ -74,14 +75,20 @@ def settings_page():
     # -------------------------------
     st.markdown("### 📂 엑셀 파일 경로 설정")
 
-    rate_path = st.text_input("요율표(rate_table.xlsx) 경로", value=settings.get("rate_table_path", "rate_table.xlsx"))
-    partner_path = st.text_input("기관 담당자 DB(partner_db.xlsx) 경로", value=settings.get("partner_db_path", "partner_db.xlsx"))
+    rate_path = st.text_input(
+        "요율표(rate_table.xlsx) 경로",
+        value=settings.get("rate_table_path", "rate_table.xlsx")
+    )
+    partner_path = st.text_input(
+        "기관 담당자 DB(partner_db.xlsx) 경로",
+        value=settings.get("partner_db_path", "partner_db.xlsx")
+    )
 
     if st.button("엑셀 경로 저장"):
         settings["rate_table_path"] = rate_path
         settings["partner_db_path"] = partner_path
         save_settings(settings)
-        st.success("엑셀 경로가 저장되었습니다.")
+        st.success("엑셀 경로 저장됨!")
 
     st.markdown("---")
 
@@ -110,4 +117,4 @@ def settings_page():
         settings["login_fail_limit"] = int(login_fail_limit)
         settings["auto_logout_minutes"] = int(auto_logout_minutes)
         save_settings(settings)
-        st.success("보안 설정이 저장되었습니다.")
+        st.success("보안 설정 저장됨!")
