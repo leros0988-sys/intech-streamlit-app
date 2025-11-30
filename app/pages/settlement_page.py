@@ -118,7 +118,8 @@ def settlement_page():
         "합계": "합 계",
         "합계금액": "합 계",
     }
-    rates_df.rename(columns=col_map, inplace=True)
+    inv_map = {normalize_col(k): v for k, v in col_map.items()}
+    rates_df.rename(columns=inv_map, inplace=True)
 
     with st.expander("2025 발송료 미리보기 (상위 30행)"):
         st.dataframe(rates_df.head(30), use_container_width=True)
