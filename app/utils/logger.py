@@ -3,29 +3,23 @@
 import os
 from datetime import datetime
 
-import pandas as pd
+LOG_FILE = "app/logs/system.log"
+os.makedirs("app/logs", exist_ok=True)
 
-LOG_FILE = "app/utils/login_logs.csv"
+def write_log(user: str, action: str):
+    """사용자 행동을 로그 텍스트 파일에 기록"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    line = f"[{timestamp}] ({user}) {action}\n"
 
-def write_log(user: str, message: str) -> None:
-    """로그인/관리 이벤트 간단 기록"""
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new = pd.DataFrame([[now, user, message]],
-                       columns=["timestamp", "user", "message"])
-
-    if os.path.exists(LOG_FILE):
-        old = pd.read_csv(LOG_FILE)
-        df = pd.concat([old, new], ignore_index=True)
-    else:
-        df = new
-
-    df.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(line)
 
 
-def load_login_logs() -> pd.DataFrame:
-    """로그 CSV 로드 (없으면 빈 DF)"""
+def read_logs() -> list:
+    """저장된 로그 전체를 리스트로 반환"""
     if not os.path.exists(LOG_FILE):
-        return pd.DataFrame(columns=["timestamp", "user", "message"])
-    return pd.read_csv(LOG_FILE)
+        return []
 
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines()]

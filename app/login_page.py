@@ -1,5 +1,6 @@
 import streamlit as st
 import streamlit as st
+from app.utils.logger import write_log
 
 def login_page():
 
