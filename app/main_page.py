@@ -1,6 +1,7 @@
 import streamlit as st
 from app.style import apply_global_styles
 from app.utils.loader import load_settings
+import streamlit.components.v1 as components
 
 # ---------------------------------------------------------
 # 🔥 메인 페이지
@@ -177,7 +178,32 @@ def main_page():
                 st.session_state.guestbook.pop(real_idx)
                 st.rerun()
 
-# ===== 🔥 유튜브 영상 (새 링크) =====
-st.video("https://youtu.be/0f2x_3zlz4I")
+    # ------------------------------------
+    # 🔥 유튜브 영상 (함수 내부에 포함)
+    # ------------------------------------
+    st.markdown("<hr style='margin-top:40px; margin-bottom:30px;'>", unsafe_allow_html=True)
 
+    st.markdown(
+        "<div style='text-align:center; font-size:20px; font-weight:700; margin-bottom:10px;'>"
+        "📺 운영 안내 영상"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
+    youtube_url = "https://www.youtube.com/embed/0f2x_3zlz4I"
+
+    components.html(
+        f"""
+        <div style="display:flex; justify-content:center; margin-top:10px; margin-bottom:40px;">
+            <iframe 
+                width="750"
+                height="422"
+                src="{youtube_url}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+        """,
+        height=450,
+    )
