@@ -2,7 +2,7 @@ import pandas as pd
 from typing import List
 
 
-class MissingDetector:
+class MissingFinder:
     """
     카카오 월별통계(kakao_df)와
     2025 발송료/기안자료 master_df(= rates_df or drafts_df)
