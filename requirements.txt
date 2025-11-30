@@ -1,4 +1,7 @@
 streamlit
 pandas
 openpyxl
+xlsxwriter
 reportlab
+fpdf2
+Pillow
