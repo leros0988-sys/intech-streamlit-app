@@ -3,51 +3,46 @@ from app.style import apply_global_styles
 from app.utils.loader import load_settings
 
 
-# -----------------------------------------------------
-# 🔥 유튜브 링크를 안전하게 embed로 변환하는 함수
-#   (오류 153 방지: st.video() 대신 iframe 직접 삽입)
-# -----------------------------------------------------
-def embed_youtube(url: str):
+# ---------------------------------------------------------
+# 🔥 YouTube 안전 재생 함수 (오류 153 완전 차단)
+# ---------------------------------------------------------
+def render_youtube(url: str):
     if not url:
-        return
+        return st.warning("유튜브 URL이 등록되지 않았습니다.")
 
-    # 1) youtu.be → watch?v=
-    if "youtu.be/" in url:
-        video_id = url.split("youtu.be/")[1].split("?")[0]
-        url = f"https://www.youtube.com/watch?v={video_id}"
+    # --- 영상 ID 추출 ---
+    video_id = None
 
-    # 2) shorts → watch?v=
-    if "youtube.com/shorts/" in url:
-        video_id = url.split("shorts/")[1].split("?")[0]
-        url = f"https://www.youtube.com/watch?v={video_id}"
-
-    # 3) m.youtube.com → www.youtube.com
-    if "m.youtube.com" in url:
-        url = url.replace("m.youtube.com", "www.youtube.com")
-
-    # 4) watch?v= → embed 변환
-    embed_url = url
     if "watch?v=" in url:
         video_id = url.split("watch?v=")[1].split("&")[0]
-        embed_url = f"https://www.youtube.com/embed/{video_id}"
+    elif "youtu.be/" in url:
+        video_id = url.split("youtu.be/")[1].split("?")[0]
+    elif "shorts/" in url:
+        video_id = url.split("shorts/")[1].split("?")[0]
 
-    # 5) iframe 삽입
-    st.components.v1.html(
-        f"""
-        <iframe width="100%" height="520"
-        src="{embed_url}"
+    if not video_id:
+        return st.error("유효한 유튜브 URL이 아닙니다.")
+
+    embed_url = f"https://www.youtube.com/embed/{video_id}"
+
+    # --- Streamlit 오류 153을 우회하는 안정 iframe 방식 ---
+    iframe_html = f"""
+    <iframe 
+        width="100%" 
+        height="480" 
+        src="{embed_url}" 
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
-        """,
-        height=540
-    )
+        allowfullscreen>
+    </iframe>
+    """
+
+    st.components.v1.html(iframe_html, height=500)
 
 
-
-# -----------------------------------------------------
-# 📌 메인 페이지
-# -----------------------------------------------------
+# ---------------------------------------------------------
+# 🔥 메인 페이지
+# ---------------------------------------------------------
 def main_page():
     apply_global_styles()
     settings = load_settings()
@@ -79,16 +74,17 @@ def main_page():
         </div>
     """, unsafe_allow_html=True)
 
+    # ------------------------------------
+    # 정산 요약
+    # ------------------------------------
     df = st.session_state.get("raw_df")
     total_statements = 0
     total_amount = 0
 
     if df is not None:
-        # 카카오 settle id 기준 정산서 개수
         if "카카오 settle id" in df.columns:
             total_statements = df["카카오 settle id"].dropna().astype(str).nunique()
 
-        # 금액 컬럼 탐색
         amount_col = None
         for cand in ["금액", "청구금액", "정산금액", "합계"]:
             if cand in df.columns:
@@ -220,8 +216,8 @@ def main_page():
                 st.rerun()
 
     # ------------------------------------
-    # 유튜브 영상 재생 (오류 153 완전 방지)
+    # 🔥 유튜브 영상 재생 (오류 153 완전 해결)
     # ------------------------------------
-    st.markdown("## 📺 쉬어가기")
-    embed_youtube(settings.get("youtube_url", ""))
+    url = settings.get("youtube_url", "")
+    render_youtube(url)
 
