@@ -178,27 +178,28 @@ def main_page():
                 st.rerun()
 
     # ------------------------------------
-    # 유튜브 쉬어가기
+    # 유튜브 자동 변환 + 재생
     # ------------------------------------
-    st.markdown("## 📺 쉬어가기...")
-
-    # 저장된 유튜브 링크 불러오기
     url = settings.get("youtube_url", "")
 
-    # 🎯 유튜브 URL 자동 변환
-    if url.startswith("https://youtu.be/"):
-        video_id = url.replace("https://youtu.be/", "").strip()
-        url = f"https://www.youtube.com/watch?v={video_id}"
+    if url:
+        # 1) youtu.be → watch?v=
+        if url.startswith("https://youtu.be/"):
+            video_id = url.replace("https://youtu.be/", "")
+            # ?si= 등 파라미터 제거
+            video_id = video_id.split("?")[0]
+            url = f"https://www.youtube.com/watch?v={video_id}"
 
-    elif "youtube.com/shorts/" in url:
-        try:
+        # 2) shorts → watch?v=
+        elif "youtube.com/shorts/" in url:
             video_id = url.split("shorts/")[1].split("?")[0]
             url = f"https://www.youtube.com/watch?v={video_id}"
-        except:
-            pass
 
-    # 영상 표시
-    if url:
-        st.video(url)
-    else:
-        st.info("유튜브 링크가 설정되지 않았습니다. 설정 메뉴에서 추가해주세요.")
+        # 3) 모바일 URL → desktop URL
+        elif url.startswith("https://m.youtube.com/"):
+            url = url.replace("https://m.youtube.com/", "https://www.youtube.com/")
+
+        try:
+            st.video(url)
+        except:
+            st.error("유튜브 영상을 불러오지 못했습니다. URL을 다시 확인해주세요.")
