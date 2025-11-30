@@ -1,24 +1,21 @@
+# ---------------------------------------
+# streamlit_app.py (완전 재작성 버전)
+# ---------------------------------------
 import streamlit as st
 
 from app.style import apply_global_styles
 
-# ---- 페이지 import ----
+# ----- 페이지들 -----
 from app.login_page import login_page
 from app.main_page import main_page
-from app.upload_page import upload_page
-from app.finance_page import finance_page
-from app.gian_page import gian_page
+from app.pages.settlement_page import settlement_page  # 🔥 새 정산 페이지
 from app.logs_page import logs_page
-from app.partner_page import partner_page
-from app.kakao_stats_page import kakao_stats_page
-from app.kt_stats_page import kt_stats_page
-from app.naver_stats_page import naver_stats_page
 from app.admin_page import admin_page
 from app.settings_page import settings_page
 
 
 # ---------------------------------------
-# 🔵 Session 초기 설정 (값 덮어쓰기 금지)
+# 🔵 Session 초기 설정
 # ---------------------------------------
 def init_session():
     defaults = {
@@ -26,7 +23,6 @@ def init_session():
         "user": None,
         "is_admin": False,
         "page": "login",
-        "raw_combined_df": None,   # 업로드된 병합 데이터
     }
 
     for key, value in defaults.items():
@@ -42,7 +38,7 @@ def run_app():
     apply_global_styles()
 
     # ----------------------------
-    # 로그인 안 되었으면 로그인 페이지
+    # 로그인 안 되어 있으면 로그인 페이지
     # ----------------------------
     if not st.session_state.logged_in:
         login_page()
@@ -55,13 +51,7 @@ def run_app():
         "📌 메뉴",
         [
             "메인 대시보드",
-            "정산 업로드 및 전체 통계자료",
-            "정산 처리 페이지",
-            "카카오 통계자료",
-            "KT 통계자료",
-            "네이버 통계자료",
-            "협력사 정산",
-            "기안 자료 생성",
+            "정산 페이지",        # 🔥 정산 전체 기능 1곳에 통합
             "로그 조회",
             "관리자 메뉴",
             "설정",
@@ -71,33 +61,20 @@ def run_app():
 
     # 로그아웃
     if menu == "로그아웃":
-        # 세션 모두 초기화
         for k in list(st.session_state.keys()):
             del st.session_state[k]
         st.experimental_rerun()
 
     # ----------------------------
-    # 페이지 실행 (page 값으로 라우팅)
+    # 📌 라우팅
     # ----------------------------
     st.session_state.page = menu
 
     match menu:
         case "메인 대시보드":
             main_page()
-        case "정산 업로드 및 전체 통계자료":
-            upload_page()
-        case "정산 처리 페이지":
-            finance_page()
-        case "카카오 통계자료":
-            kakao_stats_page()
-        case "KT 통계자료":
-            kt_stats_page()
-        case "네이버 통계자료":
-            naver_stats_page()
-        case "협력사 정산":
-            partner_page()
-        case "기안 자료 생성":
-            gian_page()
+        case "정산 페이지":
+            settlement_page()
         case "로그 조회":
             logs_page()
         case "관리자 메뉴":
