@@ -1,18 +1,20 @@
+# ---------------------------------------------------------
+# 🔥 메인 페이지 - 유튜브 영상 정상 재생 완전판 (오류 153 방지)
+# ---------------------------------------------------------
+
 import streamlit as st
+import streamlit.components.v1 as components
 from app.style import apply_global_styles
 from app.utils.loader import load_settings
-import streamlit.components.v1 as components
 
-# ---------------------------------------------------------
-# 🔥 메인 페이지
-# ---------------------------------------------------------
+
 def main_page():
     apply_global_styles()
     settings = load_settings()
 
-    # ------------------------------------
+    # ------------------------------------------------------
     # 상단 이미지
-    # ------------------------------------
+    # ------------------------------------------------------
     st.markdown(
         "<div style='display:flex; justify-content:center; margin-top:20px; margin-bottom:10px;'>",
         unsafe_allow_html=True
@@ -23,23 +25,22 @@ def main_page():
     st.write("")
     st.write("")
 
-    # ------------------------------------
+    # ------------------------------------------------------
     # 메인 제목
-    # ------------------------------------
+    # ------------------------------------------------------
     st.markdown("""
-        <div class="title-text"
-            style="
-                font-size:34px;
-                font-weight:900;
-                text-align:center;
-                margin-bottom:28px;">
+        <div style="
+            font-size:34px;
+            font-weight:900;
+            text-align:center;
+            margin-bottom:28px;">
             📱 아이앤텍 전자고지 대금청구서 대시보드 📱
         </div>
     """, unsafe_allow_html=True)
 
-    # ------------------------------------
+    # ------------------------------------------------------
     # 정산 요약
-    # ------------------------------------
+    # ------------------------------------------------------
     df = st.session_state.get("raw_df")
     total_statements = 0
     total_amount = 0
@@ -77,9 +78,9 @@ def main_page():
         unsafe_allow_html=True,
     )
 
-    # ------------------------------------
+    # ------------------------------------------------------
     # 공지사항
-    # ------------------------------------
+    # ------------------------------------------------------
     st.markdown(
         f"""
         <div style="
@@ -99,9 +100,9 @@ def main_page():
         unsafe_allow_html=True,
     )
 
-    # ------------------------------------
+    # ------------------------------------------------------
     # 이름 입력
-    # ------------------------------------
+    # ------------------------------------------------------
     st.markdown("""
         <div style="text-align:center; margin-bottom:20px;">
             <h1 style="font-size:28px; font-weight:700; color:#333;">
@@ -133,31 +134,30 @@ def main_page():
             </div>
         """, unsafe_allow_html=True)
 
-    # ------------------------------------
-    # 방명록
-    # ------------------------------------
+    # ------------------------------------------------------
+    # 방명록 기능
+    # ------------------------------------------------------
     st.markdown("## 💬 방명록")
 
     if "guestbook" not in st.session_state:
         st.session_state.guestbook = []
 
-    writer_name = username if username.strip() != "" else "익명"
+    writer = username if username.strip() else "익명"
     comment = st.text_area("남기고 싶은 말을 적어주세요 ✨", height=60)
 
     if st.button("🌼 방명록 남기기"):
         if comment.strip():
-            st.session_state.guestbook.append({"name": writer_name, "text": comment})
+            st.session_state.guestbook.append({"name": writer, "text": comment})
             st.success("작성되었습니다!")
             st.rerun()
         else:
-            st.warning("내용을 입력해주세요!")
+            st.warning("내용을 입력해주세요.")
 
     if len(st.session_state.guestbook) == 0:
         st.info("아직 방명록이 비어있어요. 첫 글을 남겨보세요! ✏️")
     else:
         for idx, item in enumerate(reversed(st.session_state.guestbook)):
-            real_idx = len(st.session_state.guestbook) - 1 - idx
-
+            true_idx = len(st.session_state.guestbook) - 1 - idx
             st.markdown(
                 f"""
                 <div style="
@@ -174,36 +174,30 @@ def main_page():
                 unsafe_allow_html=True
             )
 
-            if st.button("삭제하기", key=f"delete_{real_idx}"):
-                st.session_state.guestbook.pop(real_idx)
+            if st.button("삭제하기", key=f"del_{true_idx}"):
+                st.session_state.guestbook.pop(true_idx)
                 st.rerun()
 
-    # ------------------------------------
-    # 🔥 유튜브 영상 (함수 내부에 포함)
-    # ------------------------------------
-    st.markdown("<hr style='margin-top:40px; margin-bottom:30px;'>", unsafe_allow_html=True)
+    # ------------------------------------------------------
+    # 🔥 유튜브 영상 (153 오류 없는 완전 안전 방식)
+    # ------------------------------------------------------
 
-    st.markdown(
-        "<div style='text-align:center; font-size:20px; font-weight:700; margin-bottom:10px;'>"
-        "📺 운영 안내 영상"
-        "</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
 
-    youtube_url = "https://www.youtube.com/embed/0f2x_3zlz4I"
+    youtube_url = "https://www.youtube.com/embed/0f2x_3zlz4I"  # ← 여기에 네 영상 ID만 교체하면 됨
 
     components.html(
         f"""
-        <div style="display:flex; justify-content:center; margin-top:10px; margin-bottom:40px;">
-            <iframe 
+        <div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:40px;">
+            <iframe
                 width="750"
                 height="422"
                 src="{youtube_url}"
                 frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen>
             </iframe>
         </div>
         """,
-        height=450,
+        height=500,
     )
