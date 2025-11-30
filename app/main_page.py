@@ -178,7 +178,27 @@ def main_page():
                 st.rerun()
 
     # ------------------------------------
-    # 유튜브
+    # 유튜브 쉬어가기
     # ------------------------------------
     st.markdown("## 📺 쉬어가기...")
-    st.video(settings.get("youtube_url", "https://youtu.be/0f2x_3zlz4I"))
+
+    # 저장된 유튜브 링크 불러오기
+    url = settings.get("youtube_url", "")
+
+    # 🎯 유튜브 URL 자동 변환
+    if url.startswith("https://youtu.be/"):
+        video_id = url.replace("https://youtu.be/", "").strip()
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
+    elif "youtube.com/shorts/" in url:
+        try:
+            video_id = url.split("shorts/")[1].split("?")[0]
+            url = f"https://www.youtube.com/watch?v={video_id}"
+        except:
+            pass
+
+    # 영상 표시
+    if url:
+        st.video(url)
+    else:
+        st.info("유튜브 링크가 설정되지 않았습니다. 설정 메뉴에서 추가해주세요.")

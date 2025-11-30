@@ -1,7 +1,8 @@
 {
-    "rate_table_path": "app/utils/rate_table.xlsx",
-    "partner_db_path": "app/utils/기관담당자DB.xlsx",
+    "welcome_text": "환영합니다! 당신의 이름은 무엇인가요? 💖",
+    "login_fail_limit": 5,
     "main_image": "app/images/imagesusagi_kuma.png",
-    "youtube_url": "https://youtu.be/0f2x_3zlz4I",
-    "welcome_text": "환영합니다! 당신의 이름은 무엇인가요? 💖"
+    "youtube_url": "https://youtu.be/eAKqYn1EsUg?si=ljnvTdf36mniwLwb",
+    "rate_table_path": "app/utils/rate_table.xlsx",
+    "partner_db_path": "app/utils/기관담당자DB.xlsx"
 }
