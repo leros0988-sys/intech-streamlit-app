@@ -2,44 +2,6 @@ import streamlit as st
 from app.style import apply_global_styles
 from app.utils.loader import load_settings
 
-
-# ---------------------------------------------------------
-# 🔥 YouTube 안전 재생 함수 (오류 153 완전 차단)
-# ---------------------------------------------------------
-def render_youtube(url: str):
-    if not url:
-        return st.warning("유튜브 URL이 등록되지 않았습니다.")
-
-    # --- 영상 ID 추출 ---
-    video_id = None
-
-    if "watch?v=" in url:
-        video_id = url.split("watch?v=")[1].split("&")[0]
-    elif "youtu.be/" in url:
-        video_id = url.split("youtu.be/")[1].split("?")[0]
-    elif "shorts/" in url:
-        video_id = url.split("shorts/")[1].split("?")[0]
-
-    if not video_id:
-        return st.error("유효한 유튜브 URL이 아닙니다.")
-
-    embed_url = f"https://www.youtube.com/embed/{video_id}"
-
-    # --- Streamlit 오류 153을 우회하는 안정 iframe 방식 ---
-    iframe_html = f"""
-    <iframe 
-        width="100%" 
-        height="480" 
-        src="{embed_url}" 
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen>
-    </iframe>
-    """
-
-    st.components.v1.html(iframe_html, height=500)
-
-
 # ---------------------------------------------------------
 # 🔥 메인 페이지
 # ---------------------------------------------------------
@@ -215,9 +177,7 @@ def main_page():
                 st.session_state.guestbook.pop(real_idx)
                 st.rerun()
 
-    # ------------------------------------
-    # 🔥 유튜브 영상 재생 (오류 153 완전 해결)
-    # ------------------------------------
-    url = settings.get("youtube_url", "")
-    render_youtube(url)
+# ===== 🔥 유튜브 영상 (새 링크) =====
+st.video("https://youtu.be/0f2x_3zlz4I")
+
 
