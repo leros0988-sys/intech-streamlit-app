@@ -223,28 +223,24 @@ def settlement_page():
     rates_df = pd.read_excel(master_xls, sheet_name=rates_sheet)
     st.success(f"발송료 시트 '{rates_sheet}' 로드 (행 {len(rates_df)})")
 
-# === 발송료 시트 컬럼 표준화 ===
-def normalize_col(c):
-    return str(c).replace(" ", "").replace("_", "").strip().lower()
+    # === 발송료 시트 컬럼 표준화 ===
+    rates_df.columns = [normalize_col(c) for c in rates_df.columns]
 
-rates_df.columns = [normalize_col(c) for c in rates_df.columns]
+    col_map = {
+        "기관명": "기관명",
+        "기관": "기관명",
+        "카카오settleid": "카카오 settle id",
+        "settleid": "카카오 settle id",
+        "발송료": "정산발송료",
+        "정산발송료": "정산발송료",
+        "인증료": "정산인증료",
+        "정산인증료": "정산인증료",
+        "부가세": "부가세",
+        "합계": "합계",
+        "합계금액": "합계",
+    }
 
-# 중요 컬럼 재매핑
-col_map = {
-    "기관명": "기관명",
-    "기관": "기관명",
-    "카카오settleid": "카카오 settle id",
-    "settleid": "카카오 settle id",
-    "발송료": "정산발송료",
-    "정산발송료": "정산발송료",
-    "인증료": "정산인증료",
-    "정산인증료": "정산인증료",
-    "부가세": "부가세",
-    "합계": "합 계",
-    "합계금액": "합 계",
-}
-
-rates_df.rename(columns=col_map, inplace=True)
+    rates_df.rename(columns=col_map, inplace=True)
 
     with st.expander("2025 발송료 미리보기 (상위 30행)"):
         st.dataframe(rates_df.head(30), use_container_width=True)
@@ -443,3 +439,4 @@ rates_df.rename(columns=col_map, inplace=True)
             file_name=f"{selected_org}_다수기관대금청구서.pdf",
             mime="application/pdf",
         )
+
