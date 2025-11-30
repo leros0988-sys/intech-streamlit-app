@@ -52,3 +52,6 @@ def apply_global_styles():
     </style>
     """, unsafe_allow_html=True)
 
+    /* 🔥 전체 사이드바 배경을 완전히 흰색으로 변경 */
+    [data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
