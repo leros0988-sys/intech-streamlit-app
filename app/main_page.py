@@ -184,7 +184,7 @@ def main_page():
 
     st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
 
-    youtube_url = "https://www.youtube.com/watch?v=HvPQDeplVl4"  # ← 여기에 네 영상 ID만 교체하면 됨
+    youtube_url = "https://www.youtube.com/embed/Xf5WPFS9gik?si=nxyFwQPCYT2-tu37"  # ← 여기에 네 영상 ID만 교체하면 됨
 
     components.html(
         f"""
