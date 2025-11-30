@@ -49,9 +49,16 @@ def apply_global_styles():
         background-color: #ff6f9f;
     }
 
+    /* 🔥 사이드바 전체 흰색 */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+    }
+
+    /* 🔥 사이드바 내부 텍스트 색 통일 */
+    [data-testid="stSidebar"] * {
+        color: #000000 !important;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
-    /* 🔥 전체 사이드바 배경을 완전히 흰색으로 변경 */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
