@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 from app.utils.logger import write_log
 
 def login_page():
@@ -16,14 +15,8 @@ def login_page():
     if "locked" not in st.session_state:
         st.session_state.locked = False
 
-    st.markdown(
-        '<div class="title-text">📱 e mobile 정산 대시보드</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        '<div class="subtitle-text">로그인을 해주세요。</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="title-text">📱 e mobile 정산 대시보드</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle-text">로그인을 해주세요。</div>', unsafe_allow_html=True)
 
     if st.session_state.locked:
         st.error(f"로그인 실패 {fail_limit}회 초과로 계정이 잠겼습니다.")
@@ -34,19 +27,31 @@ def login_page():
 
     if st.button("로그인"):
 
+        # --------------------------
+        # 관리자 로그인
+        # --------------------------
         if user == ADMIN_ID and password == ADMIN_PW:
+            write_log(user, "로그인 성공 (관리자)")
             st.session_state.logged_in = True
             st.session_state.is_admin = True
             st.session_state.page = "메인 대시보드"
             st.rerun()
 
+        # --------------------------
+        # 일반 사용자 로그인
+        # --------------------------
         elif user == USER_ID and password == USER_PW:
+            write_log(user, "로그인 성공 (일반 사용자)")
             st.session_state.logged_in = True
             st.session_state.is_admin = False
             st.session_state.page = "메인 대시보드"
             st.rerun()
 
+        # --------------------------
+        # 로그인 실패
+        # --------------------------
         else:
+            write_log(user, "로그인 실패")
             st.session_state.login_fail_count += 1
             remain = fail_limit - st.session_state.login_fail_count
 
